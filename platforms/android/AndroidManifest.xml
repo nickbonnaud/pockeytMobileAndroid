@@ -1,88 +1,111 @@
-<?xml version='1.0' encoding='utf-8'?>
-<manifest android:hardwareAccelerated="true" android:versionCode="108" android:versionName="0.1.8" package="com.pockeyt" xmlns:android="http://schemas.android.com/apk/res/android">
-    <supports-screens android:anyDensity="true" android:largeScreens="true" android:normalScreens="true" android:resizeable="true" android:smallScreens="true" android:xlargeScreens="true" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="com.pockeyt.permission.C2D_MESSAGE" />
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="com.sec.android.provider.badge.permission.READ" />
-    <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" />
-    <uses-permission android:name="com.htc.launcher.permission.READ_SETTINGS" />
-    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
-    <uses-permission android:name="com.sonyericsson.home.permission.BROADCAST_BADGE" />
-    <uses-permission android:name="com.anddoes.launcher.permission.UPDATE_COUNT" />
-    <uses-permission android:name="com.majeur.launcher.permission.UPDATE_BADGE" />
-    <application android:hardwareAccelerated="true" android:icon="@drawable/icon" android:label="@string/app_name" android:supportsRtl="true">
-        <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale" android:label="@string/activity_name" android:launchMode="singleTask" android:name="MainActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:windowSoftInputMode="adjustResize">
-            <intent-filter android:label="@string/launcher_name">
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <data android:scheme="com.pockeyt" />
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-            </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="bnc.lt" android:pathPrefix="/igem" android:scheme="https" />
-            </intent-filter>
-        </activity>
-        <activity android:name="com.pushwoosh.MessageActivity" />
-        <activity android:name="com.pushwoosh.PushHandlerActivity" />
-        <activity android:name="com.pushwoosh.richpages.RichPageActivity" />
-        <activity android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/fb_app_name" android:name="com.facebook.FacebookActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_nfeWAeQnq5g7CFYAOpeK4mhkzDkzno9K" />
-        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
-        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/fb_app_id" />
-        <meta-data android:name="com.facebook.sdk.ApplicationName" android:value="@string/fb_app_name" />
-        <receiver android:enabled="true" android:name="com.google.android.gms.analytics.AnalyticsReceiver">
-            <intent-filter>
-                <action android:name="com.google.android.gms.analytics.ANALYTICS_DISPATCH" />
-            </intent-filter>
-        </receiver>
-        <receiver android:exported="true" android:name="com.google.android.gms.analytics.CampaignTrackingReceiver">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-        <receiver android:exported="true" android:name="com.google.android.gms.gcm.GcmReceiver" android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="PACKAGE_NAME" />
-            </intent-filter>
-        </receiver>
-        <receiver android:enabled="true" android:name="com.pushwoosh.local.BootReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.pushwoosh.local.AlarmReceiver" />
-        <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.analytics.AnalyticsService" />
-        <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
-        <service android:exported="false" android:name="com.pushwoosh.GCMListenerService">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            </intent-filter>
-        </service>
-        <service android:exported="false" android:name="com.pushwoosh.GCMInstanceIDListenerService">
-            <intent-filter>
-                <action android:name="com.google.android.gms.iid.InstanceID" />
-            </intent-filter>
-        </service>
-        <service android:exported="false" android:name="com.pushwoosh.GCMRegistrationService" />
-        <service android:name="com.pushwoosh.location.GeoLocationService" />
-    </application>
-    <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="23" />
-    <permission android:name="com.pockeyt.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<manifest android:hardwareAccelerated="true" android:versionCode="10001" android:versionName="1.0.1" package="com.pockeyt" xmlns:android="http://schemas.android.com/apk/res/android">
+  <supports-screens android:anyDensity="true" android:largeScreens="true" android:normalScreens="true" android:resizeable="true" android:smallScreens="true" android:xlargeScreens="true"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+  <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+  <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+  <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.hardware.location"/>
+  <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+  <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE"/>
+  <uses-permission android:name="${applicationId}.permission.PushHandlerActivity"/>
+  <application android:debuggable="true" android:hardwareAccelerated="true" android:icon="@mipmap/icon" android:label="@string/app_name" android:supportsRtl="true">
+    <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale" android:label="@string/activity_name" android:launchMode="singleTask" android:name="MainActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:windowSoftInputMode="adjustResize">
+      <intent-filter android:label="@string/launcher_name">
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+      <intent-filter>
+        <data android:scheme="com.pockeyt"/>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+      </intent-filter>
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:host="bnc.lt" android:scheme="https" android:pathPrefix="/igem"/>
+      </intent-filter>
+    </activity>
+    <activity android:launchMode="singleTask" android:name="com.braintreepayments.api.BraintreeBrowserSwitchActivity">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="${applicationId}.braintree"/>
+      </intent-filter>
+    </activity>
+    <activity android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/fb_app_name" android:name="com.facebook.FacebookActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+    <activity android:exported="true" android:name="com.adobe.phonegap.push.PushHandlerActivity" android:permission="${applicationId}.permission.PushHandlerActivity"/>
+    <provider android:authorities="@string/content_authority" android:exported="false" android:name="com.marianhello.bgloc.sync.DummyContentProvider" android:syncable="true"/>
+    <provider android:authorities="${applicationId}.provider" android:exported="false" android:grantUriPermissions="true" android:name="android.support.v4.content.FileProvider">
+      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths"/>
+    </provider>
+    <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/fb_app_id"/>
+    <meta-data android:name="com.facebook.sdk.ApplicationName" android:value="@string/fb_app_name"/>
+    <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+    <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_nfeWAeQnq5g7CFYAOpeK4mhkzDkzno9K"/>
+    <receiver android:enabled="true" android:name="com.google.android.gms.analytics.AnalyticsReceiver">
+      <intent-filter>
+        <action android:name="com.google.android.gms.analytics.ANALYTICS_DISPATCH"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:enabled="true" android:exported="true" android:name="com.google.android.gms.analytics.CampaignTrackingReceiver">
+      <intent-filter>
+        <action android:name="com.android.vending.INSTALL_REFERRER"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:enabled="true" android:exported="true" android:name="com.marianhello.bgloc.BootCompletedReceiver">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="com.adobe.phonegap.push.BackgroundActionButtonHandler"/>
+    <receiver android:exported="true" android:name="com.google.android.gms.gcm.GcmReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+      <intent-filter>
+        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+        <category android:name="${applicationId}"/>
+      </intent-filter>
+    </receiver>
+    <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.analytics.AnalyticsService"/>
+    <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.analytics.CampaignTrackingService"/>
+    <service android:exported="true" android:name="com.marianhello.bgloc.sync.SyncService" android:process=":sync">
+      <intent-filter>
+        <action android:name="android.content.SyncAdapter"/>
+      </intent-filter>
+      <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter"/>
+    </service>
+    <service android:name="com.marianhello.bgloc.sync.AuthenticatorService">
+      <intent-filter>
+        <action android:name="android.accounts.AccountAuthenticator"/>
+      </intent-filter>
+      <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator"/>
+    </service>
+    <service android:enabled="true" android:exported="false" android:name="com.marianhello.bgloc.LocationService"/>
+    <service android:exported="false" android:name="com.adobe.phonegap.push.GCMIntentService">
+      <intent-filter>
+        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+      </intent-filter>
+    </service>
+    <service android:exported="false" android:name="com.adobe.phonegap.push.PushInstanceIDListenerService">
+      <intent-filter>
+        <action android:name="com.google.android.gms.iid.InstanceID"/>
+      </intent-filter>
+    </service>
+    <service android:exported="false" android:name="com.adobe.phonegap.push.RegistrationIntentService"/>
+  </application>
+  <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="25"/>
+  <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature"/>
+  <permission android:name="${applicationId}.permission.PushHandlerActivity" android:protectionLevel="signature"/>
 </manifest>

@@ -9,11 +9,8 @@
       scope: {
         partner: '=bookmarkListItem',
         'shareContent': '&',
-        'toggleFavorite': '&',
-        'isFavorite': '&',
-        'toggleBookmark': '&',
-        'isBookmark': '&',
-        'searchActive': '&'
+        'openMenu': '&',
+        'purchasePost': '&'
       },
       templateUrl: 'templates/directives/bookmark-list-item.html',
       replace: true,

@@ -1,0 +1,43 @@
+<div class="view-my-profile view-main-section">
+<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container-profile content-scroll-container">
+		<div class="tips-top-section">
+			<img class="tips-business-logo" ng-src="{{ profile.logo_photo }}">
+			<span class="tips-title-section">
+				<h4 class="tips-business-title" ng-bind="profile.business_name"></h4>
+				<p>{{ transaction.updated_at | date }}</p>
+			</span>
+		</div>
+		<div class="tips-main-section"">
+			<div class="tips-receipt-section-header">
+				<h4>Item</h4>
+				<h4 class="pull-right">Amount</h4>
+			</div>
+			<div class="tips-receipt-section-body">
+				<div ng-repeat="item in bill">
+					<h4 class="tips-item-name">{{ item.quantity }}x {{ item.name }}</h4>
+					<h4 class="tips-item-amount">${{ (item.price * item.quantity) / 100 | number:2 }}</h4>
+				</div>
+				<div class="tips-receipt-section-subtotal">
+					<h4 class="tips-tax-title">Tax</h4>
+					<h4 class="tips-tax-total">${{transaction.tax / 100 | number:2 }}</h4>
+				</div>
+			</div>
+			<div ng-if="transaction.status == 11" class="tips-selector-section">
+				<button ng-class="isActive(0) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(0)">No Tip</button><button ng-class="isActive(1) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(1)">10%</button><button ng-class="isActive(2) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(2)">20%</button><button ng-class="isActive(3) ? 'tips-button-last-active' : 'tips-button-last'" ng-click="toggleTip(3); focusInput=true">Custom</button>
+
+				<input class="tips-custom-input" type="tel" name="field" ng-change="customInput(tip)" ng-show="isActive(3)" ng-model="tip" focus-me="focusInput" ui-money-mask>
+			</div>
+			<div ng-if="transaction.status == 11" class="tips-total-section">
+				<h3 class="tips-total-title">Total</h3>
+				<h3 class="tips-total-amount">${{ total | number:2 }}</h3>
+			</div>
+		</div>
+		<div ng-if="transaction.status != 11" class="bill-total-section">
+			<h3 class="tips-total-title">Total</h3>
+			<h3 class="tips-total-amount">${{ total | number:2 }}</h3>
+		</div>
+		<button ng-if="transaction.status != 11" ng-click="requestBill()" class="tips-pay-button">Request Bill</button>
+		<button ng-if="transaction.status == 11" ng-click="submitPayment()" ng-disabled="clean" class="tips-pay-button">Pay</button>
+	</div>
+</div>

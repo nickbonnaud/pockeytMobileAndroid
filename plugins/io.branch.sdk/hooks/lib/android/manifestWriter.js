@@ -1,10 +1,12 @@
+'use strict';
+
 /**
 Class injects plugin preferences into AndroidManifest.xml file.
 */
-(function() {
+(function () {
 
   var path = require('path'),
-    xmlHelper = require('../xmlHelper.js');
+      xmlHelper = require('../xmlHelper.js');
 
   module.exports = {
     writePreferences: writePreferences
@@ -20,9 +22,9 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function writePreferences(cordovaContext, pluginPreferences) {
     var pathToManifest = path.join(cordovaContext.opts.projectRoot, 'platforms', 'android', 'AndroidManifest.xml'),
-      manifestSource = xmlHelper.readXmlAsJson(pathToManifest),
-      cleanManifest,
-      updatedManifest;
+        manifestSource = xmlHelper.readXmlAsJson(pathToManifest),
+        cleanManifest,
+        updatedManifest;
 
     // remove old intent-filters
     cleanManifest = removeOldOptions(manifestSource);
@@ -46,7 +48,7 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function removeOldOptions(manifestData) {
     var cleanManifest = manifestData,
-      activities = manifestData['manifest']['application'][0]['activity'];
+        activities = manifestData['manifest']['application'][0]['activity'];
 
     activities.forEach(removeIntentFiltersFromActivity);
     cleanManifest['manifest']['application'][0]['activity'] = activities;
@@ -62,12 +64,12 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function removeIntentFiltersFromActivity(activity) {
     var oldIntentFilters = activity['intent-filter'],
-      newIntentFilters = [];
+        newIntentFilters = [];
     if (oldIntentFilters == null || oldIntentFilters.length == 0) {
       return;
     }
 
-    oldIntentFilters.forEach(function(intentFilter) {
+    oldIntentFilters.forEach(function (intentFilter) {
       if (!isIntentFilterForUniversalLinks(intentFilter)) {
         newIntentFilters.push(intentFilter);
       }
@@ -84,8 +86,8 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function isIntentFilterForUniversalLinks(intentFilter) {
     var actions = intentFilter['action'],
-      categories = intentFilter['category'],
-      data = intentFilter['data'];
+        categories = intentFilter['category'],
+        data = intentFilter['data'];
 
     return isActionForUniversalLinks(actions) && isCategoriesForUniversalLinks(categories) && isDataTagForUniversalLinks(data);
   }
@@ -104,7 +106,7 @@ Class injects plugin preferences into AndroidManifest.xml file.
 
     var action = actions[0]['$']['android:name'];
 
-    return ('android.intent.action.VIEW' === action);
+    return action === 'android.intent.action.VIEW';
   }
 
   /**
@@ -120,17 +122,17 @@ Class injects plugin preferences into AndroidManifest.xml file.
     }
 
     var isBrowsable = false,
-      isDefault = false;
+        isDefault = false;
 
     // check intent categories
-    categories.forEach(function(category) {
+    categories.forEach(function (category) {
       var categoryName = category['$']['android:name'];
       if (!isBrowsable) {
-        isBrowsable = 'android.intent.category.BROWSABLE' === categoryName;
+        isBrowsable = categoryName === 'android.intent.category.BROWSABLE';
       }
 
       if (!isDefault) {
-        isDefault = 'android.intent.category.DEFAULT' === categoryName;
+        isDefault = categoryName === 'android.intent.category.DEFAULT';
       }
     });
 
@@ -150,9 +152,9 @@ Class injects plugin preferences into AndroidManifest.xml file.
     }
 
     var dataHost = data[0]['$']['android:host'],
-      dataScheme = data[0]['$']['android:scheme'],
-      hostIsSet = dataHost != null && dataHost.length > 0,
-      schemeIsSet = dataScheme != null && dataScheme.length > 0;
+        dataScheme = data[0]['$']['android:scheme'],
+        hostIsSet = dataHost != null && dataHost.length > 0,
+        schemeIsSet = dataScheme != null && dataScheme.length > 0;
 
     return hostIsSet && schemeIsSet;
   }
@@ -170,11 +172,11 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function injectOptions(manifestData, pluginPreferences) {
     var changedManifest = manifestData,
-      targetSdk = changedManifest['manifest']['uses-sdk'][0]['$']['android:targetSdkVersion'],
-      activitiesList = changedManifest['manifest']['application'][0]['activity'],
-      launchActivityIndex = getMainLaunchActivityIndex(activitiesList),
-      ulIntentFilters = [],
-      launchActivity;
+        targetSdk = changedManifest['manifest']['uses-sdk'][0]['$']['android:targetSdkVersion'],
+        activitiesList = changedManifest['manifest']['application'][0]['activity'],
+        launchActivityIndex = getMainLaunchActivityIndex(activitiesList),
+        ulIntentFilters = [],
+        launchActivity;
 
     if (launchActivityIndex < 0) {
       console.warn('Could not find launch activity in the AndroidManifest file. Can\'t inject Universal Links preferences.');
@@ -185,7 +187,7 @@ Class injects plugin preferences into AndroidManifest.xml file.
     launchActivity = activitiesList[launchActivityIndex];
 
     // generate intent-filters
-    pluginPreferences.hosts.forEach(function(host) {
+    pluginPreferences.hosts.forEach(function (host) {
       ulIntentFilters.push(createIntentFilter(host.name, host.scheme, pluginPreferences.androidPrefix, parseInt(targetSdk) >= 23));
     });
 
@@ -203,7 +205,7 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function getMainLaunchActivityIndex(activities) {
     var launchActivityIndex = -1;
-    activities.some(function(activity, index) {
+    activities.some(function (activity, index) {
       if (isLaunchActivity(activity)) {
         launchActivityIndex = index;
         return true;
@@ -223,22 +225,22 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function isLaunchActivity(activity) {
     var intentFilters = activity['intent-filter'],
-      isLauncher = false;
+        isLauncher = false;
 
     if (intentFilters == null || intentFilters.length == 0) {
       return false;
     }
 
-    isLauncher = intentFilters.some(function(intentFilter) {
+    isLauncher = intentFilters.some(function (intentFilter) {
       var action = intentFilter['action'],
-        category = intentFilter['category'];
+          category = intentFilter['category'];
 
       if (action == null || action.length != 1 || category == null || category.length != 1) {
         return false;
       }
 
-      var isMainAction = ('android.intent.action.MAIN' === action[0]['$']['android:name']),
-        isLauncherCategory = ('android.intent.category.LAUNCHER' === category[0]['$']['android:name']);
+      var isMainAction = action[0]['$']['android:name'] === 'android.intent.action.MAIN',
+          isLauncherCategory = category[0]['$']['android:name'] === 'android.intent.category.LAUNCHER';
 
       return isMainAction && isLauncherCategory;
     });
@@ -256,7 +258,7 @@ Class injects plugin preferences into AndroidManifest.xml file.
    */
   function createIntentFilter(host, scheme, pathPrefix, androidM) {
     var intentFilter = {
-      '$' : {
+      '$': {
         'android:autoVerify': 'true'
       },
       'action': [{
@@ -282,6 +284,10 @@ Class injects plugin preferences into AndroidManifest.xml file.
       }]
     };
 
+    if (!pathPrefix) {
+      delete intentFilter['data'][0]['$']['android:pathPrefix'];
+    }
+
     if (!androidM) {
       delete intentFilter['$']['android:autoVerify'];
     }
@@ -290,5 +296,4 @@ Class injects plugin preferences into AndroidManifest.xml file.
   }
 
   // endregion
-
 })();

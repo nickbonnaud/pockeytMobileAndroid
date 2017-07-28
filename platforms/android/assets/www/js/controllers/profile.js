@@ -1,86 +1,81 @@
 (function(angular) {
 
-  var module = angular.module('pockeyt.controllers.profile', ['pockeyt.services.api', 'pockeyt.services.user-service', 'pockeyt.services.pouch-database']);
+  var module = angular.module('pockeyt.controllers.profile', ['pockeyt.services.api', 'pockeyt.services.user-service']);
 
-  var ProfileController = function($scope, $auth, $state, api, UserService, authorize, PouchDatabase) {
+  var ProfileController = function($scope, $auth, $state, api, UserService, user) {
     if(typeof analytics !== "undefined") { analytics.trackView("Profile View"); }
 
-    $scope.getProfile = function() {
-      console.log(authorize);
-      $scope.user = authorize;
-      // return api.request('/authenticate/user')
-      //   .then(function(response) {
-      //     $scope.user = response.data.user;
-      //     console.log(response);
-      //   })
-      //   .catch(function(response) {
-      //     console.log(response.data.message, response.status);
-      //   });
-    };
+    $scope.isActive = false;
+    $scope.user = user;
+    $scope.passwordChange = false;
+
+    $scope.changePassword = function() {
+      $scope.passwordChange = !$scope.passwordChange;
+    }
+
     $scope.updateProfile = function() {
-      return api.request('/authenticate/user', $scope.user, 'PUT')
+      return api.request('/update', $scope.user, 'PUT')
         .then(function(response) {
+          $auth.setToken(response.data.dbUser.token);
           $scope.user = response.data.dbUser;
-          $state.go('main.profile', null, {reload: true})
-          console.log('Profile has been updated');
+          $state.go('main.menu.profile', null, {reload: true})
         })
-        .catch(function(response) {
-          console.log(response, response.status);
+        .catch(function(error) {
+          if (error.status === 401) {
+            return window.plugins.toast.showWithOptions({
+              message: "oops! Your password or email is incorrect",
+              duration: "short",
+              position: "center",
+              styling: {
+                backgroundColor: '#ef0000'
+              }
+            });
+          } else {
+            return window.plugins.toast.showWithOptions({
+              message: "oops! Something went wrong. Try again",
+              duration: "short",
+              position: "center",
+              styling: {
+                backgroundColor: '#ef0000'
+              }
+            });
+          }
         });
     };
 
-    $scope.signOut = function() {
-      $auth.logout();
-      UserService.signOut();
-      $state.go('main.my-pockeyt');
-    };
-
     $scope.openFilePicker = function() {
-      console.log('inside file picker function');
         navigator.camera.getPicture(uploadPhoto, function (message) {
-          console.log('get picture failed');
-          },  {
+         console.log(message); },  {
                 quality: 100, 
-                destinationType: navigator.camera.DestinationType.FILE_URI,
-                sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY,
-                targetHeight: 200,
-                targetWidth: 200,
-                allowEdit: true
+                destinationType: Camera.DestinationType.FILE_URI,
+                sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                allowEdit: false
               }
         );
     };
 
     function uploadPhoto(imageURI) {
+      console.log(imageURI);
       var options = new FileUploadOptions();
       var headers = {'Connection': 'close', 'Authorization': 'Bearer ' + $auth.getToken()};
       options.fileKey="file";
       options.fileName=imageURI.substr(imageURI.lastIndexOf('/')+1);
       options.mimeType="image/jpeg";
-      console.log(options.fileName);
       options.headers = headers;
-
-      var params = new Object();
-      params.value1 = "test";
-      params.value2 = "param";
-
-      options.params = params;
       options.chunkedMode = false;
 
       var ft = new FileTransfer();
-      ft.upload(imageURI, encodeURI('http://162.243.168.64/api/authenticate/user/photo'), win, fail, options);
+      ft.upload(imageURI, encodeURI('https://pockeytbiz.com/api/authenticate/user/photo'), win, fail, options);
     };
 
     function win(r) {
-      console.log("Code = " + r.responseCode);
-      console.log("Response = " + r.response);
-      console.log("Sent = " + r.bytesSent);
-      $scope.getProfile();
+      var user = JSON.parse(r.response);
+      UserService.updateUser(user.user);
+      return $state.go('main.menu.profile', null, {reload: true});
     };
 
     function fail(error) {
         alert("An error has occurred: Code = " + error.code);
-        console.log("upload error source " + error.source);
-        console.log("upload error target " + error.target);
     };
 
     $scope.checkDevice = function() {
@@ -92,106 +87,48 @@
     };
 
     $scope.addPayment = function() {
-      _token = {Authorization: 'Bearer ' + $auth.getToken()};
-      return api.request('/token/client')
-        .then(function(response) {
-          console.log(response.data.clientToken);
-          var token = response.data.clientToken;
-
-          BraintreePlugin.initialize(token,
-            function () { console.log("init OK!"); },
-            function (error) { console.error(error); 
+      if ($scope.user.email == null) {
+        return navigator.notification.alert(
+          'Email required to add payment. Please set to continue.',
+          function() {
+            $state.go('main.menu.profile.edit');
+          },
+          'Please Set Email',
+          'Go'
+        );
+      }
+      var token = $auth.getToken();
+      var ref = window.open('https://pockeytbiz.com/api/vault/card?token=' + token, '_blank', 'location=no');
+      ref.addEventListener('loadstop', function(event) {     
+        if (event.url.match("mobile/close/success")) {
+          UserService.clearIdentity();
+          ref.close();
+          window.plugins.toast.showWithOptions({
+            message: "Success! Card stored.",
+            duration: "short",
+            position: "center",
+            styling: {
+              backgroundColor: '#20ba12'
+            }
           });
-
-          var options = {
-            cancelText: "Cancel",
-            title: "Add Card",
-            ctaText: "ADD Payment Method",
-          };
-
-          BraintreePlugin.presentDropInPaymentUI(options, function (result) {
-            console.log('inside UI dropin');
-              if (result.userCancelled) {
-                console.debug("User cancelled payment dialog.");
-              }
-              else {
-                console.info("User completed payment dialog.");
-                console.info("Payment Nonce: " + result.nonce);
-                console.debug("Payment Result.", result);
-
-                _nonce = {userNonce: result.nonce};
-                return api.request('/customer', _nonce, 'POST', _token)
-                  .then(function(response) {
-                    console.log(response);
-                    $state.go('main.profile', null, {reload: true})
-                  })
-                  .catch(function(response) {
-                    console.log("error in api call")
-                    console.log(response);
-                  });
-              }
+          return $state.go('main.menu.profile.tip-select', null, {reload: true});
+        } else if(event.url.match("mobile/close/fail")) {
+          ref.close();
+          window.plugins.toast.showWithOptions({
+            message: "oops! Something went wrong. Please try again later",
+            duration: "short",
+            position: "center",
+            styling: {
+              backgroundColor: '#ef0000'
+            }
           });
-
-        })
-        .catch(function(response) {
-          console.log(response);
-        });
+          return $state.go('main.menu.profile', null, {reload: true});
+        }
+      });
     };
-
-    $scope.editPayment = function() {
-      _token = {Authorization: 'Bearer ' + $auth.getToken()};
-      return api.request('/token/client')
-        .then(function(response) {
-          console.log(response.data.clientToken);
-          var token = response.data.clientToken;
-
-          BraintreePlugin.initialize(token,
-            function () { console.log("init OK!"); },
-            function (error) { console.error(error); 
-          });
-
-          var options = {
-            cancelText: "Cancel",
-            title: "Change Card",
-            ctaText: "CHANGE Payment Method",
-          };
-
-          BraintreePlugin.presentDropInPaymentUI(options, function (result) {
-            console.log('inside UI dropin');
-              if (result.userCancelled) {
-                console.debug("User cancelled payment dialog.");
-              }
-              else {
-                console.info("User completed payment dialog.");
-                console.info("Payment Nonce: " + result.nonce);
-                console.debug("Payment Result.", result);
-
-                _payload = {
-                  userNonce: result.nonce,
-                  payToken: $scope.user.cardToken
-                };
-
-                return api.request('/customer', _payload, 'PUT', _token)
-                  .then(function(response) {
-                    console.log(response);
-                    $state.go('main.profile', null, {reload: true})
-                  })
-                  .catch(function(response) {
-                    console.log("error in api call")
-                    console.log(response);
-                  });
-              }
-          });
-
-        })
-        .catch(function(response) {
-          console.log(response);
-        });
-    };
-    $scope.getProfile();
   };
 
 
 
-  module.controller('ProfileController', ['$scope', '$auth', '$state', 'PockeytApi', 'UserService', 'authorize', 'PouchDatabase', ProfileController]);
+  module.controller('ProfileController', ['$scope', '$auth', '$state', 'PockeytApi', 'UserService', 'user', ProfileController]);
 })(angular);

@@ -12,17 +12,10 @@
       hasMore: true,
       isLoading: false,
       empty: false,
-      search: null,
-      noResults: false,
-      searchActive: false,
+      selectedDate: 'today',
 
-      doSearch: function (search) {
-        this.searchActive = true;
-        this.hasMore = true;
-        this.page = 1;
-        this._cache = [];
-        this.search = search.input;
-        this.loadSearch(search);
+      getSelectedDate: function() {
+        return this.selectedDate;
       },
 
       doEvents: function(selectedDate) {
@@ -32,60 +25,21 @@
         }
         this._cache = [];
         this.page = 1;
-        this.hasMore = true;
-        this.searchActive = false;
         return this.loadSelectedDate(this.selectedDate);
-      },
-
-      _transformFeed: function(posts) {
-        return {
-          id: posts.id,
-          date: moment.utc(posts.published_at).local().toDate(),
-          title: posts.title,
-          body: posts.formatted_body,
-          photo_url: posts.photo_path
-        };
       },
 
       _transformPost: function(post) {
         return {
-          id: post.post_id,
-          date: moment.utc(post.published_at.date).local().toDate(),
-          event_date: post.event_date,
+          id: post.id,
+          business_id: post.profile_id,
+          business_name: post.business_name,
           title: post.title,
           body: post.body,
-          name: post.business_name,
-          thumbnail_url: post.thumbnail_url,
-          photo_url: post.photo_url,
-          business_id: post.id,
-          url: post.website,
-          review_url: post.review_url,
-          review_intro: post.review_intro,
+          post_photo: post.photo_url,
+          date: moment.utc(post.published_at.date).local().toDate(),
+          event_date: post.event_date,
+          is_redeemable: post.is_redeemable,
           logo: post.logo ? post.logo : '',
-          hero: post.hero ? post.hero : '',
-          tags: post.tags,
-          connected: false,
-          featured: post.featured || false,
-          feed: post.posts.map(this._transformFeed.bind(this)),
-          info: post.formatted_description,
-        };
-      },
-
-     _transformProfile: function(profile) {
-        return {
-          id: profile.id,
-          business_id: profile.id,
-          name: profile.business_name,
-          url: profile.website,
-          review_url: profile.review_url,
-          review_intro: profile.review_intro,
-          logo: profile.logo ? profile.logo : '',
-          hero: profile.hero ? profile.hero : '',
-          tags: profile.tags,
-          connected: false,
-          featured: profile.featured || false,
-          feed: profile.posts.map(this._transformFeed.bind(this)),
-          info: profile.formatted_description,
         };
       },
 
@@ -121,45 +75,22 @@
         }
       },
 
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fix: function(partner) {
-        return $q(function(resolve, reject) {
-          whitelabel.checkForActiveSessions(function(data) {
-            partner.unlocked = data.result;
-            resolve(partner);
-          }.bind(this), function(message) {
-            reject(new Error(message));
-          });
-        }.bind(this));
-      },
-
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fixAll: function(partner) {
-        var promises = this._cache.reduce(function(previous, current) {
-          previous.push(this.fix(current));
-          return previous;
-        }.bind(this), []);
-
-        return $q.all(promises);
-      },
-
       loadSelectedDate: function(selectedDate) {
-        if (!this.isLoading && this.hasMore) {
+        if (!this.isLoading) {
           this.isLoading = true;
           var page = this.page;
 
-          return api.request('/events?calendar=' + selectedDate + '&page=' + page).then(function(response) {
+          return api.request('/v2/events?calendar=' + selectedDate + '&page=' + page).then(function(response) {
+            if (response.data.data.length === 0) {
+              this.empty = true;
+            } else {
+              this.empty = false;
+            }
             if (!response.data.meta.pagination.links.next) {
               this.hasMore = false;
-             }
+            } else {
+              this.hasMore = true;
+            } 
             var promises = response.data.data
                 .map(this._transformPost.bind(this))
                 .map(function(partnerData) {
@@ -185,76 +116,23 @@
       },
 
       loadMore: function() {
-        if (repository.hasMore && !repository.isLoading) {
+        if (!repository.isLoading) {
           this.page += 1;
-          if(this.search === null || this.search === "") {
-            this.loadSelectedDate(this.selectedDate);
-          } else {
-            return this.loadSearch(this.search);
-          }
+          this.loadSelectedDate(this.selectedDate);
         }
       },
 
-      loadSearch: function(search) {
-        this.noResults = false;
-        this.search = search;
-        if (search === "") {
-          search = null;
-          this.searchActive = false;
-          return this.loadSelectedDate();
-        }
-
-        if (this.hasMore && !this.isLoading) {
-          this.isLoading = true;
-          var page = this.page;
-          return api.request('/search?input=' + search + '&page=' + page).then(function(response) {
-            if (!response.data.meta.pagination.links.next) {
-              this.hasMore = false;
-              this.search = null;
-             }
-             if (!response.data.meta.pagination.count) {
-              this.noResults = true;
-             }
-            var promises = response.data.data
-                .map(this._transformProfile.bind(this))
-                .map(function(partnerData) {
-                  return this.find(partnerData.id, false, true).then(function(partner) {
-                    return $q.resolve({data: partnerData, partner: partner});
-                  });
-                }.bind(this));
-            return $q.all(promises)
-                .then(function(descriptors) {
-                  angular.forEach(descriptors, function(descriptor) {
-                    if(descriptor.partner == null) {
-                      this._cache.push(new Partner(descriptor.data));
-                    } else {
-                      descriptor.partner.fill(descriptor.data);
-                    }
-                  }.bind(this));
-                  this.isLoading = false;
-                  return this._cache;
-                }.bind(this));
-          }.bind(this));
-        }
+      all: function() {
+        this._cache = [];
+        this.page = 1;
+        this.hasMore = true;
+        return this.loadSelectedDate(this.selectedDate);
       },
 
       allCached: function() {
         return this._cache;
       },
-
-      allUnlocked: function() {
-        this._unlocked.length = 0;
-        this._cache.forEach(function(partner) {
-          if(partner.unlocked === true) this._unlocked.push(partner);
-        }.bind(this));
-        return this._unlocked;
-      }
     };
-
-    $rootScope.$on('whitelabel.logout', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.success', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.failure', whitelabel.logout.bind(whitelabel, repository.fixAll.bind(repository)));
-
     return repository;
 
   }]);

@@ -1,51 +1,55 @@
 (function(angular) {
 
-  var module = angular.module('pockeyt.controllers.events', ['pockeyt.repositories.events', 'pockeyt.services.my-pockeyt', 'pockeyt.services.bookmark']);
+  var module = angular.module('pockeyt.controllers.events', ['pockeyt.repositories.events', 'pockeyt.services.my-pockeyt', 'pockeyt.services.bookmark', 'pockeyt.services.interaction-post']);
 
-  var EventsController = function($scope, allPartners, repository, MyPockeyt, Bookmark) {
+  var EventsController = function($rootScope, $scope, allPartners, repository, MyPockeyt, Bookmark, InteractionPost) {
     if(typeof analytics !== "undefined") { analytics.trackView("Events View"); }
     this.partners = {};
-
-    $scope.loadDate= function(n) {
-    	$scope.selectedDate = n;
-    	repository.loadSelectedDate($scope.selectedDate);
-    };
-
-    $scope.parentToggleBookmark = function(top) {
-      var partner = top;
-      return Bookmark.toggleBookmark(partner);
-    };
-
-    $scope.parentIsBookmark = function(top) {
-      var partner = top;
-      return $scope.isBookmark = Bookmark.isBookmark(partner);
-    };
-
-    $scope.parentShareContent = function(top) {
-      if(typeof analytics !== "undefined") { analytics.trackEvent("Share Button", "Events", top.title, top.id); }
-      this.window.plugins.socialsharing.shareViaSMS('I found this on Pockeyt http://pockeytbiz.com/posts/' + top.id);
-    };
-
     this.update(allPartners);
+    $scope.hasMore = function() {
+      return repository.hasMore;
+    };
+    $scope.empty = function() {
+      return repository.empty;
+    };
 
-    $scope.$watch(function() {return repository.allCached();}, function(val) {
-      this.update(val);
+    angular.element(document).ready(function () {
+      $rootScope.viewLoaded = true;
+    });
+
+    $scope.$watch(function() {return repository.getSelectedDate();}, function(selectedDate) {
+      var cache = repository.allCached();
+      this.update(cache);
     }.bind(this), true);
 
+    $scope.parentShareContent = function(top) {
+      if(typeof analytics !== "undefined") { analytics.trackEvent("Share Button", "Events", top.message); }
+      this.window.plugins.socialsharing.shareViaSMS('I found this on Pockeyt http://pockeytbiz.com/posts/' + top.id, null,
+        function(msg) {
+          if (msg) {
+            var type = 'share';
+            InteractionPost.buttonInteraction(type, top);
+          }
+        }, 
+        function(msg) {
+          console.log(msg);
+        }
+      );
+    };
+
     $scope.loadMore = function() {
-      repository.loadMore();
+      return repository.loadMore();
     };
 
     $scope.isLoading = function() {
       return repository.isLoading;
     };
-
   };
 
   EventsController.prototype.update = function(partners) {
     this.partners.all = partners;
   };
 
-  module.controller('EventsController', ['$scope', 'allPartners', 'eventsRepository', 'MyPockeyt', 'Bookmark', EventsController]);
+  module.controller('EventsController', ['$rootScope', '$scope', 'allPartners', 'eventsRepository', 'MyPockeyt', 'Bookmark', 'InteractionPost', EventsController]);
 
 })(angular);

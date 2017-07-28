@@ -8,41 +8,31 @@
             <div class="partner-logo" eve-background-image="partner.entity.logo"></div>
             <div class="partner-details">
                 <div class="partner-name">
-                    {{partner.entity.name}}
+                    {{partner.entity.business_name}}
                 </div>
                 <div class="partner-url">
                     <a href="#" ng-click="partner.goUrl()">{{partner.entity.url | domain}}</a>
                 </div>
             </div>
         </div>
-        <!-- <div class="partner-lock-state"
-             ng-click="partner.entity.lockIfUnlocked()"
-             ng-class="{'partner-lock-state-locked': !partner.entity.unlocked, 'partner-lock-state-unlocked': partner.entity.unlocked}">
-            {{partner.entity.unlocked ? 'Tap to lock' : 'Login locked'}}
-            <span class="icon pull-right" ng-class="{'ea-icon-unlock': partner.entity.unlocked, 'ea-icon-lock': !partner.entity.unlocked}"></span>
-        </div> -->
         <div class="segmented-control partner-tabs thick-tabs">
             <a class="control-item  active" href="#partner-feed">Feed</a>
             <a class="control-item" href="#partner-info">Info</a>
         </div>
         <div>
             <!--suppress XmlDuplicatedId -->
-            <ul ng-if="partner.entity.feed.length > 0" class="control-content active table-view" id="partner-feed">
-                <li class="table-view-cell feedentry" ng-repeat="feedentry in partner.entity.feed">
-                    <div class="media-body">
-                        <h4 class="feed-title" ng-bind="feedentry.title"></h4>
-                        <img ng-hide="!feedentry.photo_url" class="media-object postimage" ng-src="{{feedentry.photo_url}}">
-                        <div class="feed-body" ng-bind-html="feedentry.body"></div>
-                        <p ng-if="feedentry.date" class="postdate pull-left" ng-bind="feedentry.date.toDateString()"></p>
-                        <a class="share-button" href="#" ng-click="shareContent(feedentry)">
-                            <span class="icon ea-icon-share pull-right"></span>
-                        </a>
-                    </div>
-                </li>
+            <ul ng-if="partner.posts.length > 0" class="table-view control-content active" id="partner-feed">
+                <li ng-repeat="post in partner.posts" feed-list-item="post" share-content="parentShareContent" open-menu="parentOpenMenu" purchase-post="parentPurchasePost"></li>
             </ul>
-            <!--suppress XmlDuplicatedId -->
-            <div ng-if="partner.entity.feed.length == 0" class="control-content active partner-info" id="partner-feed"><p>No recent activity.</p></div>
-            <!--suppress XmlDuplicatedId -->
+            <ul ng-if="partner.posts.length == 0" class="table-view control-content active" id="partner-feed">
+                <li class="table-view-cell results-empty"><strong>No Recent Posts</strong></li>
+            </ul>
+
+            <button ng-if="hasMore()" ng-hide="isLoading()" ng-click="loadMorePosts(partner.entity.business_id)" class="btn btn-load btn-block control-content active" id="partner-feed">Load More</button>
+
+            <div class="spinner control-content active" ng-show="isLoading()" id="partner-feed">
+                <span us-spinner="{radius:8, width:5, length:3, lines:9}"></span>
+            </div>
             
             <div ng-if="partner.entity.info" class="control-content partner-info" id="partner-info">
                 <div ng-hide="!partner.entity.review_url">

@@ -13,6 +13,9 @@
         'hm.readmore',
         'ct.ui.router.extras',
         'satellizer',
+        'ui.utils.masks',
+        'chart.js',
+        'angular-inview',
 
         // App components
         'pockeyt.utils',
@@ -21,9 +24,14 @@
         'pockeyt.services.my-pockeyt',
         'pockeyt.services.user-service',
         'pockeyt.services.bookmark',
-        'pockeyt.services.geolocate',
         'pockeyt.services.authorization',
-        'pockeyt.services.pouch-database',
+        'pockeyt.services.notification',
+        'pockeyt.services.bg-geolocate',
+        'pockeyt.services.geolocation-auth',
+        'pockeyt.services.user-details',
+        'pockeyt.services.notify-service',
+        'pockeyt.services.viewed-posts',
+        'pockeyt.services.interaction-post',
         //'pockeyt.controllers.left_drawer',
         //'pockeyt.controllers.right_drawer',
         'pockeyt.controllers.login',
@@ -39,6 +47,18 @@
         'pockeyt.controllers.profile',
         'pockeyt.controllers.signup',
         'pockeyt.controllers.pay',
+        'pockeyt.controllers.tips',
+        'pockeyt.controllers.tip-rate',
+        'pockeyt.controllers.menu',
+        'pockeyt.controllers.bill',
+        'pockeyt.controllers.recent-transactions',
+        'pockeyt.controllers.recent-transaction',
+        'pockeyt.controllers.location-settings',
+        'pockeyt.controllers.deals',
+        'pockeyt.controllers.deal',
+        'pockeyt.controllers.loyalty-program',
+        'pockeyt.controllers.loyalty-card',
+        'pockeyt.controllers.deal-details',
         'pockeyt.directives.partner',
         'pockeyt.directives.date-picker',
         'pockeyt.directives.title-search',
@@ -49,6 +69,9 @@
         'pockeyt.directives.blog',
         'pockeyt.directives.bookmark',
         'pockeyt.directives.password-match',
+        'pockeyt.directives.focus-on',
+        'pockeyt.directives.view-loaded',
+        'pockeyt.directives.feed-item',
       ]
   );
 
@@ -57,7 +80,16 @@
     $urlRouterProvider.deferIntercept();
   });
 
-  pockeyt.run(function($rootScope, $state, $q, $urlRouter) {
+  pockeyt.run(function($rootScope, $state, $q, $urlRouter, $timeout, Notification, $auth, UserService, bgGeolocate) {
+    Notification.init();
+    function goNextState(state) {
+      if (state.name === 'main.explore' || $rootScope.viewLoaded) {
+        $rootScope.viewLoaded = false;
+        return $state.go(state, undefined, { location: false });
+      } else {
+        return goNextState(state);
+      }
+    };
 
     function DelayPromise(delay) {  
       //return a function that accepts a single variable
@@ -71,32 +103,65 @@
         });
       }
     };
+    $timeout(loadStart, 850);
     // get list of all registered states
-    $rootScope.isBooting = true;
-    // SpinnerPlugin.activityStart("Loading...");
-    $state.get()
-       // limit to those with 'state.preload'
-      .filter(function(state) { return state.preload; })
-      // create a promise chain that goes to the state, then goes to the next one
-      .reduce(function (memo, state) {
-        // dont update the location (location: false)
-        return memo.then(DelayPromise(1000)).then(function() {
-          return $state.go(state, undefined, { location: false }); 
-        });
-      }, $q.when())
-      .then(function() {
-        // ok, now sync the url
+    function loadStart() {
+      if (!$rootScope.notifOpenApp) {
+        $rootScope.isBooting = true;
+        // SpinnerPlugin.activityStart("Loading...");
+        $state.get()
+           // limit to those with 'state.preload'
+          .filter(function(state) { return state.preload; })
+          // create a promise chain that goes to the state, then goes to the next one
+          .reduce(function (memo, state) {
+            // dont update the location (location: false)
+            return memo.then(DelayPromise(500)).then(function() {
+              return goNextState(state);
+            });
+          }, $q.when())
+          .then(function() {
+            // ok, now sync the url
+            $urlRouter.listen();
+            // SpinnerPlugin.activityStop();
+            $rootScope.isBooting = false;
+            return UserService.identity()
+            .then(function(identity) {
+              if (($auth.isAuthenticated()) && (angular.isDefined(identity))) {
+                if(identity.customer_id !== null) {
+                  if (identity.default_tip_rate !== null) {
+                    Notification.checkNotifPermissions();
+                    bgGeolocate.initialInit();
+                    return Notification.billWaiting();
+                  } else {
+                    return navigator.notification.alert(
+                      'You have set your payment method but have not specified a default tip rate. Please set to continue.',
+                      function() {
+                        $state.go('main.profile.tip-select');
+                      },
+                      'Set Default Tip',
+                      'Set Rate'
+                    );
+                  }
+                }
+              }
+            });
+          });
+      } else {
         $urlRouter.listen();
-        // SpinnerPlugin.activityStop();
-        $rootScope.isBooting = false;
-      });
+        return UserService.identity()
+        .then(function(identity) {
+          if (($auth.isAuthenticated()) && (angular.isDefined(identity))) {
+            bgGeolocate.initGeo();
+            return Notification.billWaiting();
+          }
+        });
+      }
+    }
   });
 
-  pockeyt.run(['$rootScope', '$state', '$stateParams', '$log', 'Authorization', 'UserService', 'PouchDatabase', 'PockeytApi',
-    function($rootScope,   $state,   $stateParams, $log, Authorization, UserService, PouchDatabase, api) {
-      
-      PouchDatabase.setDatabase("data");
-
+  pockeyt.run(['$rootScope', '$state', '$stateParams', 'Authorization', 'UserService',
+    function($rootScope, $state, $stateParams, Authorization, UserService) {
+      FastClick.attach(document.body);
       $rootScope.$state = $state;
       $rootScope.$stateParams = $stateParams;
       $rootScope.$on('$stateChangeStart', function(event, toState, toStateParams) {
@@ -106,14 +171,14 @@
           Authorization.authorize();
         }
       });
-      // FastClick.attach(document.body);
-      PouchDatabase.getUserData();
     }
   ]);
 
-  pockeyt.config(['$stateProvider', '$stickyStateProvider', '$urlRouterProvider', '$urlMatcherFactoryProvider', '$authProvider', 'localStorageServiceProvider',
-    function($stateProvider, $stickyStateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $authProvider, localStorageServiceProvider) {
-
+  pockeyt.config(['$stateProvider', '$stickyStateProvider', '$urlRouterProvider', '$urlMatcherFactoryProvider', '$authProvider', 'localStorageServiceProvider', 'ChartJsProvider',
+    function($stateProvider, $stickyStateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $authProvider, localStorageServiceProvider, ChartJsProvider) {
+      ChartJsProvider.setOptions({
+        responsive: false
+      });
       var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
       $urlMatcherFactoryProvider.type('uuid4', {
@@ -212,26 +277,28 @@
             preload: true,
             resolve: {
               allPartners: ['eventsRepository', function(partners) {
-                return partners.doEvents();
+                return partners.all();
               }]
             }
           })
-          .state('main.blogs', {
+          .state('main.menu', {
             parent: 'main',
             views: {
-              'blogs': {
-                templateUrl: 'templates/blogs.html',
-                controller: 'BlogsController',
-                controllerAs: 'blogs',
+              'menu': {
+                templateUrl: 'templates/menu.html',
+                controller: 'MenuController',
+                controllerAs: 'menu',
               }
             },
-            url: '/blogs',
-            sticky: true,
-            dsr: true,
-            preload: true,
+            url: '/menu',
+            preload: false,
             resolve: {
-              allPartners: ['blogsRepository', function(partners) {
-                return partners.all();
+              user: ['Authorization', function(Authorization) {
+                return Authorization.authorize();
+              }],
+              billOpen: ['UserDetails', 'user', function(UserDetails, user) {
+                if (user === 'signup' || user === 'login') { return; }
+                return UserDetails.checkBillOpen();
               }]
             }
           })
@@ -254,25 +321,115 @@
               }]
             }
           })
-          .state('main.bookmark', {
+          .state('main.menu.bookmark', {
             parent: 'main',
-            views: {
-              'bookmark': {
-                templateUrl: 'templates/bookmark.html',
-                controller: 'BookmarkController',
-                controllerAs: 'bookmark',
-              }
-            },
+            templateUrl: 'templates/bookmark.html',
+            controller: 'BookmarkController',
+            controllerAs: 'bookmark',
             url: '/bookmark',
-            sticky: true,
-            dsr: true,
             resolve: {
               allPartners: ['bookmarksRepository', function(partners) {
                 return partners.allBookmarks();
               }]
             }
           })
-          .state('main.login', {
+          .state('main.menu.bill', {
+            parent: 'main',
+            templateUrl: 'templates/bill.html',
+            controller: 'BillController',
+            url: '/bill',
+            resolve: {
+              currentBill: ['UserDetails', function(UserDetails) {
+                return UserDetails.getBill();
+              }]
+            }
+          })
+          .state('main.menu.recent-transactions', {
+            parent: 'main',
+            templateUrl: 'templates/recent-transactions.html',
+            controller: 'RecentTransactionsController',
+            url: '/recent-transactions',
+            resolve: {
+              recentTransactions: ['transactionsRepository', function(transactions) {
+                return transactions.all();
+              }]
+            }
+          })
+          .state('main.menu.deals', {
+            parent: 'main',
+            templateUrl: 'templates/deals.html',
+            controller: 'DealsController',
+            url: '/deals',
+            resolve: {
+              allDeals: ['dealsRepository', function(deals) {
+                return deals.all();
+              }]
+            }
+          })
+          .state('main.menu.deals.deal', {
+            parent: 'main',
+            templateUrl: 'templates/deal.html',
+            controller: 'DealController',
+            url: '/deal',
+            params: {
+              deal: null,
+            }
+          })
+          .state('main.menu.recent-transactions.recent-transaction', {
+            parent: 'main',
+            templateUrl: 'templates/recent-transaction.html',
+            controller: 'RecentTransactionController',
+            url: '/recent-transaction',
+            params: {
+              transaction: null,
+            }
+          })
+          .state('main.menu.loyalty-program.loyalty-card', {
+            parent: 'main',
+            templateUrl: 'templates/loyalty-card.html',
+            controller: 'LoyaltyCardController',
+            url: '/loyalty-card',
+            params: {
+              loyaltyCard: null
+            }
+          })
+          .state('main.menu.loyalty-program', {
+            parent: 'main',
+            templateUrl: 'templates/loyalty-program.html',
+            controller: 'LoyaltyProgramController',
+            url: '/loyalty-program',
+            resolve: {
+              loyaltyCards: ['loyaltyCardsRepository', function(cards) {
+                return cards.all();
+              }]
+            }
+          })
+          .state('main.menu.location-settings', {
+            parent: 'main',
+            templateUrl: 'templates/location-settings.html',
+            controller: 'LocationSettingsController',
+            url: '/location-settings',
+            resolve: {
+              geoSettingPhone: ['bgGeolocate', function(bgGeolocate) {
+                return bgGeolocate.getGeoState();
+              }],
+              geoSettingApp: ['bgGeolocate', function(bgGeolocate) {
+                return bgGeolocate.getAppLocationServices();
+              }]
+            }
+          })
+          .state('main.tip-custom', {
+            parent: 'main',
+            url: '/tip-custom',
+            templateUrl: 'templates/tip-custom.html',
+            controller: 'TipsController',
+            params: {
+              user: null,
+              transaction: null,
+              profile: null
+            },
+          })
+          .state('main.menu.login', {
             parent: 'main',
             url: '/login',
             templateUrl: 'templates/login.html',
@@ -284,40 +441,43 @@
             templateUrl: 'templates/pay.html',
             controller: 'PayController',
           })
-          .state('main.signup', {
+          .state('main.menu.signup', {
             parent: 'main',
             url: '/signup',
             templateUrl: 'templates/signup.html',
             controller: 'SignupController',
           })
-          .state('main.profile', {
+          .state('main.menu.profile', {
             parent: 'main',
-            views: {
-              'profile': {
-                templateUrl: 'templates/profile.html',
-                controller: 'ProfileController',
-                controllerAs: 'profile',
-              }
-            },
+            templateUrl: 'templates/profile.html',
+            controller: 'ProfileController',
             url: '/profile',
-            sticky: true,
-            dsr: true,
             resolve: {
-              authorize: ['Authorization', function(Authorization) {
-                console.log(Authorization.authorize());
-                return Authorization.authorize();
+              user: ['UserService', function(UserService) {
+                return UserService.identity();
               }]
             }
           })
-          .state('main.profile.edit', {
+          .state('main.menu.profile.tip-select', {
+            parent: 'main',
+            url: '/tip-select',
+            templateUrl: 'templates/tip-select.html',
+            controller: 'TipRateController',
+            resolve: {
+              user: ['UserService', function(UserService) {
+                return UserService.identity();
+              }]
+            }
+          })
+          .state('main.menu.profile.edit', {
             parent: 'main',
             url: '/edit',
             templateUrl: 'templates/edit-profile.html',
             controller: 'ProfileController',
             controllerAs: 'profile',
             resolve: {
-              authorize: ['Authorization', function(Authorization) {
-                return Authorization.authorize();
+              user: ['UserService', function(UserService) {
+                return UserService.identity();
               }]
             }
           })
@@ -335,9 +495,21 @@
                 function($stateParams, partners, $state) {
                   return partners.find($stateParams.partner);
                 }
-              ]
-            },
-            
+              ],
+              allPosts: ['businessPostsRepository', 'partner', function(businessPosts, partner) {
+                return businessPosts.all(partner.business_id);
+              }]
+            }
+          })
+          .state('main.deal-details', {
+            parent: 'main',
+            templateUrl: 'templates/deal-details.html',
+            controller: 'DealDetailsController',
+            url: '/deal-details',
+            params: {
+              deal: null,
+              prevState: null
+            }
           })
           .state('main.my-pockeyt.favorite', {
             parent: 'main',
@@ -353,26 +525,11 @@
                 function($stateParams, partners, $state) {
                   return partners.find($stateParams.partner);
                 }
-              ]
-            },
-            
-          })
-          .state('main.bookmark.saved', {
-            parent: 'main',
-            templateUrl: 'templates/partner-bookmark.html',
-            controller: 'PartnerController',
-            controllerAs: 'partner',
-            params: {
-              partner: {value: undefined}
-            },
-            url: '/saved/{partner}',
-            resolve: {
-              partner: ['$stateParams', 'bookmarksRepository',
-                function($stateParams, partners, $state) {
-                  return partners.find($stateParams.partner);
-                }
-              ]
-            },
+              ],
+              allPosts: ['businessPostsRepository', 'partner', function(businessPosts, partner) {
+                return businessPosts.all(partner.business_id);
+              }]
+            }
           })
           .state('main.connect.business', {
             parent: 'main',
@@ -388,10 +545,33 @@
                 function($stateParams, partners, $state) {
                   return partners.find($stateParams.partner);
                 }
-              ]
+              ],
+              allPosts: ['businessPostsRepository', 'partner', function(businessPosts, partner) {
+                return businessPosts.all(partner.business_id);
+              }]
+            }
+          })
+          .state('main.menu.bookmark.saved', {
+            parent: 'main',
+            templateUrl: 'templates/partner-bookmark.html',
+            controller: 'PartnerController',
+            controllerAs: 'partner',
+            params: {
+              partner: {value: undefined}
             },
-            
-          })/*
+            url: '/saved/{partner}',
+            resolve: {
+              partner: ['$stateParams', 'bookmarksRepository',
+                function($stateParams, partners, $state) {
+                  return partners.find($stateParams.partner);
+                }
+              ],
+              allPosts: ['businessPostsRepository', 'partner', function(businessPosts, partner) {
+                return businessPosts.all(partner.business_id);
+              }]
+            },
+          })
+          /*
           .state('my-profile', {
             parent: 'main',
             templateUrl: 'templates/my-profile.html',
@@ -410,8 +590,8 @@
 
       $urlRouterProvider.otherwise('/my-pockeyt');
 
-      $authProvider.loginUrl = 'http://162.243.168.64/api/authenticate';
-      $authProvider.signupUrl = 'http://162.243.168.64/api/register';
+      $authProvider.loginUrl = 'https://pockeytbiz.com/api/authenticate';
+      $authProvider.signupUrl = 'https://pockeytbiz.com/api/register';
 
       localStorageServiceProvider
           .setPrefix('pockeyt')

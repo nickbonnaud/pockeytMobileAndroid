@@ -1,14 +1,16 @@
+'use strict';
+
 /*
 Helper class to read data from config.xml file.
 */
-(function() {
+(function () {
   var path = require('path'),
-    xmlHelper = require('./xmlHelper.js'),
-    ANDROID = 'android',
-    IOS = 'ios',
-    CONFIG_FILE_NAME = 'config.xml',
-    context,
-    projectRoot;
+      xmlHelper = require('./xmlHelper.js'),
+      ANDROID = 'android',
+      IOS = 'ios',
+      CONFIG_FILE_NAME = 'config.xml',
+      context,
+      projectRoot;
 
   module.exports = ConfigXmlHelper;
 
@@ -29,11 +31,11 @@ Helper class to read data from config.xml file.
    *
    * @return {Object} JSON object with data from config.xml
    */
-  ConfigXmlHelper.prototype.read = function() {
+  ConfigXmlHelper.prototype.read = function () {
     var filePath = getConfigXmlFilePath();
 
     return xmlHelper.readXmlAsJson(filePath);
-  }
+  };
 
   /**
    * Get package name for the application. Depends on the platform.
@@ -41,10 +43,10 @@ Helper class to read data from config.xml file.
    * @param {String} platform - 'ios' or 'android'; for what platform we need a package name
    * @return {String} package/bundle name
    */
-  ConfigXmlHelper.prototype.getPackageName = function(platform) {
+  ConfigXmlHelper.prototype.getPackageName = function (platform) {
     var configFilePath = getConfigXmlFilePath(),
-      config = getCordovaConfigParser(configFilePath),
-      packageName;
+        config = getCordovaConfigParser(configFilePath),
+        packageName;
 
     switch (platform) {
       case ANDROID:
@@ -63,16 +65,16 @@ Helper class to read data from config.xml file.
     }
 
     return packageName;
-  }
+  };
 
   /**
    * Get name of the current project.
    *
    * @return {String} name of the project
    */
-  ConfigXmlHelper.prototype.getProjectName = function() {
+  ConfigXmlHelper.prototype.getProjectName = function () {
     return getProjectName();
-  }
+  };
 
   // endregion
 
@@ -92,7 +94,7 @@ Helper class to read data from config.xml file.
     try {
       ConfigParser = context.requireCordovaModule('cordova-common/src/ConfigParser/ConfigParser');
     } catch (e) {
-      ConfigParser = context.requireCordovaModule('cordova-lib/src/configparser/ConfigParser')
+      ConfigParser = context.requireCordovaModule('cordova-lib/src/configparser/ConfigParser');
     }
 
     return new ConfigParser(configFilePath);
@@ -110,11 +112,10 @@ Helper class to read data from config.xml file.
    */
   function getProjectName() {
     var configFilePath = getConfigXmlFilePath(),
-      config = getCordovaConfigParser(configFilePath);
+        config = getCordovaConfigParser(configFilePath);
 
     return config.name();
   }
 
   // endregion
-
 })();

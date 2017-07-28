@@ -1,22 +1,8 @@
 (function(angular, moment) {
 
-  var module = angular.module('pockeyt.repositories.businesses', ['pockeyt.models.partner', 'pockeyt.services.whitelabel', 'pockeyt.services.api']);
+  var module = angular.module('pockeyt.repositories.businesses', ['pockeyt.models.partner', 'pockeyt.services.api']);
 
-  // module.filter(
-  //     'partners_are',
-  //     function() {
-  //       return function(partners, prop, invert) {
-  //         if(typeof prop !== 'string') throw new TypeError('prop argument to partners_are filter must be string');
-
-  //         return partners.filter(function(element, index, arr) {
-  //           var is = element[prop];
-  //           return (!invert && !!is) || (!!invert && !is);
-  //         });
-  //       }
-  //     }
-  // );
-
-  module.factory('businessesRepository', ['$q', '$rootScope', 'Partner', 'whitelabel', 'PockeytApi', function($q, $rootScope, Partner, whitelabel, api) {
+  module.factory('businessesRepository', ['$q', 'Partner', 'PockeytApi', function($q, Partner, api) {
 
     var repository = {
       _stale: true,
@@ -36,38 +22,22 @@
         this.loadSearch(search);
       },
 
-      _transformFeed: function(posts) {
-        return {
-          id: posts.id,
-          date: moment.utc(posts.published_at).local().toDate(),
-          title: posts.title,
-          body: posts.formatted_body,
-          photo_url: posts.photo_path
-        };
-      },
-
       _transformProfile: function(profile) {
         return {
-          id: profile.id,
-          business_id: profile.id,
-          name: profile.business_name,
+          business_id: profile.profile_id,
+          business_name: profile.business_name,
           url: profile.website,
-          review_url: profile.review_url,
-          review_intro: profile.review_intro,
           logo: profile.logo ? profile.logo : '',
           hero: profile.hero ? profile.hero : '',
           tags: profile.tags,
-          connected: false,
-          featured: profile.featured || false,
-          feed: profile.posts.map(this._transformFeed.bind(this)),
           info: profile.formatted_description,
         };
       },
 
       _findInCache: function(id) {
         for(var i = 0; i < this._cache.length; i++) {
-          if(this._cache[i].id == id) {
-            return this.fix(this._cache[i]);
+          if(this._cache[i].business_id == id) {
+            return this._cache[i];
           }
         }
 
@@ -96,49 +66,19 @@
         }
       },
 
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fix: function(partner) {
-        return $q(function(resolve, reject) {
-          whitelabel.checkForActiveSessions(function(data) {
-            partner.unlocked = data.result;
-            resolve(partner);
-          }.bind(this), function(message) {
-            reject(new Error(message));
-          });
-        }.bind(this));
-      },
-
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fixAll: function(partner) {
-        var promises = this._cache.reduce(function(previous, current) {
-          previous.push(this.fix(current));
-          return previous;
-        }.bind(this), []);
-
-        return $q.all(promises);
-      },
-
       loadBizs: function() {
         if (this.hasMore && !this.isLoading) {
           this.isLoading = true;
           var page = this.page;
 
-          return api.request('/profilesv1?page=' + page).then(function(response) {
+          return api.request('/v2/profiles?page=' + page).then(function(response) {
             if (!response.data.meta.pagination.links.next) {
               this.hasMore = false;
              }
             var promises = response.data.data
                 .map(this._transformProfile.bind(this))
                 .map(function(partnerData) {
-                  return this.find(partnerData.id, false, true).then(function(partner) {
+                  return this.find(partnerData.business_id, false, true).then(function(partner) {
                     return $q.resolve({data: partnerData, partner: partner});
                   });
                 }.bind(this));
@@ -181,7 +121,7 @@
         if (this.hasMore && !this.isLoading) {
           this.isLoading = true;
           var page = this.page;
-          return api.request('/search?input=' + search + '&page=' + page).then(function(response) {
+          return api.request('/v2/search?input=' + search + '&page=' + page).then(function(response) {
             if (!response.data.meta.pagination.links.next) {
               this.hasMore = false;
               this.search = null;
@@ -192,7 +132,7 @@
             var promises = response.data.data
                 .map(this._transformProfile.bind(this))
                 .map(function(partnerData) {
-                  return this.find(partnerData.id, false, true).then(function(partner) {
+                  return this.find(partnerData.business_id, false, true).then(function(partner) {
                     return $q.resolve({data: partnerData, partner: partner});
                   });
                 }.bind(this));
@@ -222,19 +162,7 @@
       allCached: function() {
         return this._cache;
       },
-
-      allUnlocked: function() {
-        this._unlocked.length = 0;
-        this._cache.forEach(function(partner) {
-          if(partner.unlocked === true) this._unlocked.push(partner);
-        }.bind(this));
-        return this._unlocked;
-      }
     };
-
-    $rootScope.$on('whitelabel.logout', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.success', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.failure', whitelabel.logout.bind(whitelabel, repository.fixAll.bind(repository)));
 
     return repository;
 

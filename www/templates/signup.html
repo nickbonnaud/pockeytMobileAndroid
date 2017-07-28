@@ -1,8 +1,18 @@
-<div class="view-login view-main-section">
+<div class="view-login view-main-section-deals">
     <div id="container" class="content-container content-scroll-container">
         <div class="register-block">
-            <h4>Register to use Pockeyt Pay</h4>
-            <form method="post" ng-submit="signup()" name="signupForm" novalidate>
+            <h4 ng-show="unlocked">Register to use Pockeyt Pay</h4>
+            <h4 ng-show="!unlocked">Pockeyt Pay Invite Code required</h4>
+
+            <form ng-show="!unlocked" method="post" ng-submit="sendCode()" name="inviteCodeForm" novalidate>
+                <input type="text" name="invite_code" ng-model="invite_code" placeholder="Invite Code" ng-minlength="6" required>
+                <button class="btn btn-block btn-primary" ng-disabled="inviteCodeForm.$invalid" type="submit">Submit Code</button>
+                <p class="text-center text-muted">
+                    <small>Already signed up? <a ui-sref="main.menu.login">Go to Login</a></small>
+                </p>
+            </form>
+
+            <form ng-show="unlocked" method="post" ng-submit="signup()" name="signupForm" novalidate>
                 <input type="text" name="first_name" ng-model="first_name" placeholder="First Name" ng-minlength="3" required>
                     <p ng-show="signupForm.first_name.$error.required && signupForm.first_name.$dirty">* First name is required</p>
                     <p ng-show="signupForm.first_name.$error.minlength && signupForm.first_name.$dirty">* First name must be longer than 3 characters</p>
@@ -17,17 +27,17 @@
                     <p ng-show="signupForm.password.$error.minlength && signupForm.password.$dirty">* Password must be longer than 6 characters</p>
                 <input password-match="password" type="password" name="confirmPassword" ng-model="confirmPassword" placeholder="Confirm Password">
                     <p ng-show="signupForm.confirmPassword.$invalid && signupForm.confirmPassword.$dirty">* Password must match</p>
-                <button class="btn btn-block btn-primary" ng-disabled="myForm.$invalid" type="submit">Sign up</button>
+                <button class="btn btn-block btn-primary" ng-disabled="signupForm.$invalid" type="submit">Sign up</button>
                 <p class="text-center text-muted">
-                    <small>Already signed up? <a ui-sref="main.login">Go to Login</a></small>
+                    <small>Already signed up? <a ui-sref="main.menu.login">Go to Login</a></small>
                 </p>
             </form>
         </div>
-        <div class="signup-or-separator">
+        <div ng-show="unlocked" class="signup-or-separator">
             <h6 class="text">or</h6>
             <hr>
         </div>
-        <button class="btn btn-block btn-facebook" ng-click="facebookSignIn()">
+        <button ng-show="unlocked" class="btn btn-block btn-facebook" ng-click="facebookSignIn()">
           <i class="ion-social-facebook"></i> Sign up with Facebook
         </button>
     </div>

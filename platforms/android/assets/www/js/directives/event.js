@@ -8,12 +8,7 @@
       restrict: 'AE',
       scope: {
         partner: '=eventListItem',
-        'shareContent': '&',
-        'toggleFavorite': '&',
-        'isFavorite': '&',
-        'searchActive': '&',
-        'toggleBookmark': '&',
-        'isBookmark': '&'
+        'shareContent': '&'
       },
       templateUrl: 'templates/directives/event-list-item.html',
       replace: true,

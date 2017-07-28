@@ -40,17 +40,7 @@
         $scope.$evalAsync(function () {
           $scope.$watch('search.input', function (newVal, oldVal) {
             if (angular.isDefined(newVal)) {
-              switch ($scope.currentState) {
-                case 'main.explore':
-                  partnersRepository.doSearch(newVal);
-                  break;
-                case 'main.my-pockeyt':
-                  favoritesRepository.doSearch(newVal);
-                  break;
-                case 'main.connect':
-                  businessesRepository.doSearch(newVal);
-                  break;
-              }
+              businessesRepository.doSearch(newVal);
             }
           });
         });

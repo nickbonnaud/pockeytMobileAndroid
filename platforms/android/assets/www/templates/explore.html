@@ -1,16 +1,10 @@
 <div class="view-explore view-main-section">
-    <div title-search></div>
-    <div id="container" class="content-container content-scroll-container">
-        <ul class="table-view control-content active" id="explore-new" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
-            <li ng-repeat="partner in explore.partners.all" partner-list-item="partner" share-content="parentShareContent" toggle-favorite="parenttoggleFavorite" is-favorite="parentIsFavorite" toggle-bookmark="parentToggleBookmark" is-bookmark="parentIsBookmark" search-active="parentSearchActive"></li>
-        </ul>
-        <ul class="table-view control-content active" id="explore-new" ng-if="noResults()">
-            <li class="table-view-cell table-view-cell-center">
-                <strong>Sorry! No businesses match your search...</strong>
-            </li>
-        </ul>
-        <div class="spinner" ng-show="isLoading()">
-            <span us-spinner="{radius:8, width:5, length:3, lines:9}"></span>
-        </div>
-    </div>
+  <div id="container" class="content-container content-scroll-container" in-view-container>
+      <ul class="table-view control-content active" id="explore-new" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
+          <li ng-repeat="partner in explore.partners.all" partner-list-item="partner" share-content="parentShareContent" open-menu="parentOpenMenu" purchase-post="parentPurchasePost" in-view="postViewed(partner, $inview, $inviewInfo)" in-view-options="{ generateParts: true }"></li>
+      </ul>
+      <div class="spinner" ng-show="isLoading()">
+          <span us-spinner="{radius:8, width:5, length:3, lines:9}"></span>
+      </div>
+  </div>
 </div>

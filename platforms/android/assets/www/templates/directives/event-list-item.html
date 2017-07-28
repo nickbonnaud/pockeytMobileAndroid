@@ -1,15 +1,19 @@
-<li class="table-view-cell media" >
+<li class="table-view-cell media post" >
     <div class="event-date pull-left">
         <h3 ng-bind="partner.event_date | date:'d'"></h4>
         <h4 ng-bind="partner.event_date | date:'EEE'"></h4>
     </div>
     <div class="event-media-body">
-        <p class="event-partnername" ng-bind="partner.name"></p>
+        <p ng-if="partner.business_name.length <= 20" class="event-partnername" ng-bind="partner.business_name"></p>
+        <p ng-if="partner.business_name.length > 20" class="event-partnername" >{{ partner.business_name | limitTo : 20 }}...</p>
         <p ng-bind-html="partner.title"></p>
     </div>
     <div class="post-image">
-        <img ng-hide="!partner.photo_url" class="media-object postimage" ng-src="{{partner.photo_url}}">
+        <img ng-hide="!partner.post_photo" class="media-object postimage" ng-src="{{partner.post_photo}}">
     </div>
+     <a ng-hide="searchActive()()" class="share-button" href="#" ng-click="shareContent()(partner)">
+        <span class="icon ea-icon-share pull-left"></span>
+    </a>
     <div class="post-footer">
         <p class="postdate pull-left" hm-read-more
             hm-text="{{ partner.body }}" 
@@ -17,14 +21,7 @@
             hm-more-text="more" 
             hm-less-text="less"
             hm-dots-class="postdate"
-            hm-link-class="postdate">
-                
+            hm-link-class="postdate"> 
         </p>
-        <a class="bookmark-item" href="#" ng-click="toggleBookmark()(partner)">
-            <span class="icon" ng-class="isBookmark()(partner) ? ' icon ea-icon-bookmark-filled' : 'icon ea-icon-bookmark'"></span>
-        </a>
-        <a ng-hide="searchActive()()" class="share-button" href="#" ng-click="shareContent()(partner)">
-            <span class="icon ea-icon-share pull-right"></span>
-        </a>
     </div>
 </li>

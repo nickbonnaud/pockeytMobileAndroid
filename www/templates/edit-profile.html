@@ -1,5 +1,5 @@
 <div class="view-my-profile view-main-section">
-	<a href="#" ui-sref="main.profile" ><span ng-class="checkDevice()"></span></a>
+	<a href="#" ui-sref="main.menu.profile"><span ng-class="checkDevice()"></span></a>
 	<div id="container" class="content-container-profile content-scroll-container">
 		<div class="register-block">
 			<span class="sign-out-tab">
@@ -17,7 +17,15 @@
           <input type="email" id="email" name="email" ng-model="user.email" placeholder="Email" required>
               <p ng-show="signupForm.email.$error.required && signupForm.email.$dirty">* Email is required</p>
               <p ng-show="signupForm.email.$invalid && signupForm.email.$dirty">* Email must be a valid email address</p>
-          <button class="btn btn-block btn-primary" ng-disabled="myForm.$invalid" type="submit">Update</button>
+          <input type="password" name="password" ng-model="user.password" placeholder="Password" ng-minlength="6" required>
+          <p ng-show="signupForm.password.$error.required && signupForm.password.$dirty">* Password is required</p>
+          <p class="change-password" ng-click="changePassword()">Change Password</p>
+          <input ng-if="passwordChange" type="password" name="passwordNew" ng-model="user.passwordNew" placeholder="New Password" ng-minlength="6" required>
+              <p ng-show="signupForm.passwordNew.$error.required && signupForm.passwordNew.$dirty">* Password is required</p>
+              <p ng-show="signupForm.passwordNew.$error.minlength && signupForm.passwordNew.$dirty">* Password must be longer than 6 characters</p>
+          <input ng-if="passwordChange" password-match="user.passwordNew" type="password" name="confirmPassword" ng-model="user.confirmPassword" placeholder="Confirm New Password">
+              <p ng-show="signupForm.confirmPassword.$invalid && signupForm.confirmPassword.$dirty">* Password must match</p>
+          <button class="btn btn-block btn-primary" ng-disabled="signupForm.$invalid" type="submit">Update</button>
       </form>
 
 		</div>

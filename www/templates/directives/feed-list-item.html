@@ -1,0 +1,38 @@
+<li class="table-view-cell media post" >
+    <img class="media-object pull-left partnerlogo" ng-src="{{post.logo}}">
+    <div class="post-top">
+        <p ng-if="post.business_name.length <= 20" class="partnername-feed" ng-bind="post.business_name"></p>
+        <p ng-if="post.business_name.length > 20" class="partnername-feed">{{ post.business_name | limitTo : 20 }}...</p>
+        <span ng-if="post.is_redeemable" class="icon ea-icon-deal-post" ng-click="purchasePost()(post)"></span>
+    </div>
+    <div class="post-image">
+        <img ng-hide="!post.post_photo" class="media-object postimage" ng-src="{{post.post_photo}}">
+    </div>
+    <div ng-if="post.post_photo" class="post-selections">
+        <a class="share-button" href="#" ng-click="shareContent()(post)">
+            <span class="icon ea-icon-share pull-left"></span>
+        </a>
+        <span ng-click="openMenu()(post)" class="icon ea-icon-more-post pull-right"></span>
+    </div>
+    <div class="post-footer">
+        <div ng-if="post.event_date" class="event-date-feed">
+            <h3 ng-bind="post.event_date | date:'d'"></h4>
+            <h4 ng-bind="post.event_date | date:'MMM'"></h4>
+        </div>
+        <p hm-read-more
+            hm-text="{{ post.message }}" 
+            hm-limit="150" 
+            hm-more-text="more" 
+            hm-less-text="less"
+            hm-dots-class="post-dots"
+            hm-link-class="post-toggle-text">
+        </p>
+        <p class="postdate pull-right" ng-bind="post.date.toDateString()"></p>
+    </div>
+    <div ng-if="!post.post_photo" class="post-selections">
+        <a class="share-button" href="#" ng-click="shareContent()(post)">
+            <span class="icon ea-icon-share pull-left"></span>
+        </a>
+        <span ng-click="openMenu()(post)" class="icon ea-icon-more-post pull-right"></span>
+    </div>
+</li>

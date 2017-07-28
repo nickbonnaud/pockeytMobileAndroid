@@ -44,7 +44,7 @@
       link: function($scope, attrs) {
         $scope.$evalAsync(function () {
           $scope.$watch('selectedDate', function (val) {
-              repository.doEvents(val);
+            repository.doEvents(val);
           });
         });
       }

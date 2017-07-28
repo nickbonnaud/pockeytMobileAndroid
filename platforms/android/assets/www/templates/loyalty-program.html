@@ -1,0 +1,68 @@
+<div class="view-my-pockeyt view-main-section">
+<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container content-scroll-container">
+		<ul class="table-view" ng-if="!empty() && hasMore()" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
+			<li ng-repeat="loyaltyCard in loyaltyCards" class="table-view-cell">
+				<a href="#" ui-sref=".loyalty-card({'loyaltyCard': loyaltyCard})">
+					<div class="navigate-right">
+						<div class="loyalty-program-header">
+							<img class="user-profile-thumb-loyalty" ng-src="{{ loyaltyCard.business_thumb_path }}">
+							<p class="business-name-loyalty" ng-bind="loyaltyCard.business_name"></p>
+						</div>
+						<div ng-if="loyaltyCard.is_increment" class="loyalty-program-progress">
+							<progress max="1" value="{{ loyaltyCard.current_amount / loyaltyCard.purchases_required }}"></progress>
+						
+							<div class="loyalty-progress-block" ng-if="loyaltyCard.purchases_required - loyaltyCard.current_amount !== 1">
+								<p class="loyalty-progress-text">{{ loyaltyCard.purchases_required - loyaltyCard.current_amount }} more purchases to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+							<div class="loyalty-progress-block" ng-if="loyaltyCard.purchases_required - loyaltyCard.current_amount === 1">
+								<p class="loyalty-progress-text">{{ loyaltyCard.purchases_required - loyaltyCard.current_amount }} more purchase to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+						</div>
+
+						<div ng-if="!loyaltyCard.is_increment" class="loyalty-program-progress">
+							<progress max="1" value="{{loyaltyCard.current_amount / loyaltyCard.amount_required}}"></progress>
+							<div class="loyalty-progress-block" ng-if="!loyaltyCard.is_increment">
+								<p class="loyalty-progress-text">${{ (loyaltyCard.amount_required - loyaltyCard.current_amount) / 100 | number:2 }} to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+						</div>
+					</div>
+				</a>
+			</li>
+		</ul>
+		<ul class="table-view" ng-if="!empty() && !hasMore()">
+			<li ng-repeat="loyaltyCard in loyaltyCards" class="table-view-cell">
+				<a href="#" ui-sref=".loyalty-card({'loyaltyCard': loyaltyCard})">
+					<div class="navigate-right">
+						<div class="loyalty-program-header">
+							<img class="user-profile-thumb-loyalty" ng-src="{{ loyaltyCard.business_thumb_path }}">
+							<p class="business-name-loyalty" ng-bind="loyaltyCard.business_name"></p>
+						</div>
+						<div ng-if="loyaltyCard.is_increment" class="loyalty-program-progress">
+							<progress max="1" value="{{ loyaltyCard.current_amount / loyaltyCard.purchases_required }}"></progress>
+						
+							<div class="loyalty-progress-block" ng-if="loyaltyCard.purchases_required - loyaltyCard.current_amount !== 1">
+								<p class="loyalty-progress-text">{{ loyaltyCard.purchases_required - loyaltyCard.current_amount }} more purchases to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+							<div class="loyalty-progress-block" ng-if="loyaltyCard.purchases_required - loyaltyCard.current_amount === 1">
+								<p class="loyalty-progress-text">{{ loyaltyCard.purchases_required - loyaltyCard.current_amount }} more purchase to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+						</div>
+
+						<div ng-if="!loyaltyCard.is_increment" class="loyalty-program-progress">
+							<progress max="1" value="{{loyaltyCard.current_amount / loyaltyCard.amount_required}}"></progress>
+							<div class="loyalty-progress-block" ng-if="!loyaltyCard.is_increment">
+								<p class="loyalty-progress-text">${{ (loyaltyCard.amount_required - loyaltyCard.current_amount) / 100 | number:2 }} to go for a {{ loyaltyCard.reward }}!</p>
+							</div>
+						</div>
+					</div>
+				</a>
+			</li>
+		</ul>
+		<ul class="table-view" ng-if="empty()">
+      <li class="table-view-cell results-empty">
+        <strong>No purchases made with businesses using a loyalty program.</strong>
+      </li>
+    </ul>
+	</div>
+</div>

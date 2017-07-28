@@ -1,22 +1,8 @@
 (function(angular, moment) {
 
-  var module = angular.module('pockeyt.repositories.favorites', ['pockeyt.models.partner', 'pockeyt.services.whitelabel', 'pockeyt.services.api', 'pockeyt.services.my-pockeyt']);
+  var module = angular.module('pockeyt.repositories.favorites', ['pockeyt.models.partner', 'pockeyt.services.api', 'pockeyt.services.my-pockeyt']);
 
-  // module.filter(
-  //     'partners_are',
-  //     function() {
-  //       return function(partners, prop, invert) {
-  //         if(typeof prop !== 'string') throw new TypeError('prop argument to partners_are filter must be string');
-
-  //         return partners.filter(function(element, index, arr) {
-  //           var is = element[prop];
-  //           return (!invert && !!is) || (!!invert && !is);
-  //         });
-  //       }
-  //     }
-  // );
-
-  module.factory('favoritesRepository', ['$q', '$rootScope', 'Partner', 'whitelabel', 'PockeytApi', 'MyPockeyt', function($q, $rootScope, Partner, whitelabel, api, MyPockeyt) {
+  module.factory('favoritesRepository', ['$q', 'Partner', 'PockeytApi', 'MyPockeyt', function($q, Partner, api, MyPockeyt) {
 
     var repository = {
       _stale: true,
@@ -27,61 +13,63 @@
       isLoading: false,
       empty: false,
 
-      _transformFeed: function(posts) {
-        return {
-          id: posts.id,
-          date: moment.utc(posts.published_at).local().toDate(),
-          title: posts.title,
-          body: posts.formatted_body,
-          photo_url: posts.photo_path
-        };
-      },
-
       _transformPost: function(post) {
-        return {
-          id: post.post_id,
-          date: moment.utc(post.published_at.date).local().toDate(),
-          title: post.title,
-          body: post.body,
-          name: post.business_name,
-          thumbnail_url: post.thumbnail_url,
-          photo_url: post.photo_url,
-          business_id: post.id,
-          url: post.website,
-          review_url: post.review_url,
-          review_intro: post.review_intro,
-          logo: post.logo ? post.logo : '',
-          hero: post.hero ? post.hero : '',
-          tags: post.tags,
-          connected: false,
-          featured: post.featured || false,
-          feed: post.posts.map(this._transformFeed.bind(this)),
-          info: post.formatted_description,
-        };
-      },
-
-     _transformProfile: function(profile) {
-        return {
-          id: profile.id,
-          business_id: profile.id,
-          name: profile.business_name,
-          url: profile.website,
-          review_url: profile.review_url,
-          review_intro: profile.review_intro,
-          logo: profile.logo ? profile.logo : '',
-          hero: profile.hero ? profile.hero : '',
-          tags: profile.tags,
-          connected: false,
-          featured: profile.featured || false,
-          feed: profile.posts.map(this._transformFeed.bind(this)),
-          info: profile.formatted_description,
-        };
+        if (post.is_redeemable) {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            is_redeemable: post.is_redeemable,
+            deal_item: post.deal_item,
+            price: post.price,
+            end_date: post.end_date,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        } else if (post.event_date && post.event_date != '0000-00-00') {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            event_date: post.event_date,
+            is_redeemable: post.is_redeemable,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        } else {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            is_redeemable: post.is_redeemable,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        }
       },
 
       _findInCache: function(id) {
         for(var i = 0; i < this._cache.length; i++) {
-          if(this._cache[i].id == id) {
-            return this.fix(this._cache[i]);
+          if(this._cache[i].business_id == id) {
+            return this._cache[i];
           }
         }
 
@@ -110,36 +98,6 @@
         }
       },
 
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fix: function(partner) {
-        return $q(function(resolve, reject) {
-          whitelabel.checkForActiveSessions(function(data) {
-            partner.unlocked = data.result;
-            resolve(partner);
-          }.bind(this), function(message) {
-            reject(new Error(message));
-          });
-        }.bind(this));
-      },
-
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fixAll: function(partner) {
-        var promises = this._cache.reduce(function(previous, current) {
-          previous.push(this.fix(current));
-          return previous;
-        }.bind(this), []);
-
-        return $q.all(promises);
-      },
-
       loadFavs: function() {
         if (this.hasMore && !this.isLoading) {
           this.isLoading = true;
@@ -152,7 +110,7 @@
             this.empty = true;
           };
 
-          return api.request('/favs?profiles=' + favoriteIds + '&page=' + page).then(function(response) {
+          return api.request('/v2/favs?profiles=' + favoriteIds + '&page=' + page).then(function(response) {
             if (!response.data.meta.pagination.links.next) {
               this.hasMore = false;
              }
@@ -184,7 +142,7 @@
         if (repository.hasMore && !repository.isLoading) {
           this.page += 1;
           this.loadFavs();
-        };
+        }
       },
 
       allFavs: function() {
@@ -197,19 +155,7 @@
       allCached: function() {
         return this._cache;
       },
-
-      allUnlocked: function() {
-        this._unlocked.length = 0;
-        this._cache.forEach(function(partner) {
-          if(partner.unlocked === true) this._unlocked.push(partner);
-        }.bind(this));
-        return this._unlocked;
-      }
     };
-
-    $rootScope.$on('whitelabel.logout', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.success', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.failure', whitelabel.logout.bind(whitelabel, repository.fixAll.bind(repository)));
 
     return repository;
 

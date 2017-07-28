@@ -1,10 +1,16 @@
-<div class="view-login view-main-section">
+<div class="view-login view-main-section-deals">
     <div id="container" class="content-container content-scroll-container">
-        <div class="login-block">
-            <form method="post" ng-submit="login()" name="loginForm">
-                <input type="email" class="input-thick" name="email" ng-model="user.email" placeholder="Email">
-                <input type="password" class="input-thick" name="password" ng-model="user.password" placeholder="Password">
-                <button class="btn btn-block btn-primary" type="submit">Log in</button>
+        <div class="register-block">
+            <form method="post" ng-submit="login()" name="loginForm" novalidate>
+                <input type="email" id="email" class="input-thick" name="email" ng-model="user.email" placeholder="Email" required>
+                    <p ng-show="loginForm.email.$error.required && loginForm.email.$dirty">* Email is required</p>
+                    <p ng-show="loginForm.email.$invalid && loginForm.email.$dirty">* Email must be a valid email address</p>
+                <input type="password" class="input-thick" name="password" ng-model="user.password" placeholder="Password" required>
+                    <p ng-show="loginForm.password.$error.required && loginForm.password.$dirty">* Password is required</p>
+                <button class="btn btn-block btn-primary" ng-disabled="loginForm.$invalid" type="submit">Log in</button>
+                <p class="text-center text-muted">
+                    <small>Don't have an Account? <a ui-sref="main.menu.signup">Go to Signup</a></small>
+                </p>
             </form>
         </div>
         <div class="signup-or-separator">

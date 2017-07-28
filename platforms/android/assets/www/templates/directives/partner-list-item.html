@@ -1,24 +1,41 @@
-<li class="table-view-cell media" >
+<li class="table-view-cell media post">
     <a href="#" ui-sref=".partner({'partner': partner.id})">
         <img class="media-object pull-left partnerlogo" ng-src="{{partner.logo}}">
     </a>
-    <a class="partnername" href="#" ui-sref=".partner({'partner': partner.id})" ng-bind="partner.name"></a>
-    <div class="media-body"  >
-        <p ng-bind-html="partner.title"></p>
+    <div class="post-top">
+        <a ng-if="partner.business_name.length <= 20" class="partnername" href="#" ui-sref=".partner({'partner': partner.id})" ng-bind="partner.business_name"></a>
+        <a ng-if="partner.business_name.length > 20" class="partnername" href="#" ui-sref=".partner({'partner': partner.id})">{{ partner.business_name | limitTo : 20 }}...</a>
+        <a href="#" ui-sref=".partner({'partner': partner.id})"><span class="icon ea-icon-chevron-right"></span></a>
+        <span ng-if="partner.is_redeemable" ng-click="purchasePost()(partner)" class="icon ea-icon-deal-post"></span>
     </div>
     <div class="post-image">
-        <img ng-hide="!partner.photo_url" class="media-object postimage" ng-src="{{partner.photo_url}}">
+        <img ng-hide="!partner.post_photo" class="media-object postimage" ng-src="{{partner.post_photo}}">
+    </div>
+    <div ng-if="partner.post_photo" class="post-selections">
+        <a class="share-button" href="#" ng-click="shareContent()(partner)">
+            <span class="icon ea-icon-share pull-left"></span>
+        </a>
+        <span ng-click="openMenu()(partner)" class="icon ea-icon-more-post pull-right"></span>
     </div>
     <div class="post-footer">
-        <p class="postdate pull-left" ng-bind="partner.date.toDateString()"></p>
-        <a class="fav-item" href="#" ng-click="toggleFavorite()(partner)">
-            <span class="icon" ng-class="isFavorite()(partner) ? ' icon ea-icon-add-my-pockeyt-filled' : 'icon ea-icon-add-my-pockeyt'"></span>
+        <div ng-if="partner.event_date" class="event-date-feed">
+            <h3 ng-bind="partner.event_date | date:'d'"></h4>
+            <h4 ng-bind="partner.event_date | date:'MMM'"></h4>
+        </div>
+        <p hm-read-more
+            hm-text="{{ partner.message }}" 
+            hm-limit="150" 
+            hm-more-text="more" 
+            hm-less-text="less"
+            hm-dots-class="post-dots"
+            hm-link-class="post-toggle-text">
+        </p>
+        <p class="postdate pull-right" ng-bind="partner.date.toDateString()"></p>
+    </div>
+    <div ng-if="!partner.post_photo" class="post-selections">
+        <a class="share-button" href="#" ng-click="shareContent()(partner)">
+            <span class="icon ea-icon-share pull-left"></span>
         </a>
-        <a ng-hide="searchActive()()" class="bookmark-item" href="#" ng-click="toggleBookmark()(partner)">
-            <span class="icon" ng-class="isBookmark()(partner) ? ' icon ea-icon-bookmark-filled' : 'icon ea-icon-bookmark'"></span>
-        </a>
-        <a ng-hide="searchActive()()" class="share-button" href="#" ng-click="shareContent()(partner)">
-            <span class="icon ea-icon-share pull-right"></span>
-        </a>
+        <span ng-click="openMenu()(partner)" class="icon ea-icon-more-post pull-right"></span>
     </div>
 </li>

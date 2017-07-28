@@ -1,5 +1,5 @@
 <div class="view-connect view-main-section">
-  <div title-search></div>
+  <div ng-if="!isBooting()" title-search></div>
   <div id="container" class="content-container content-scroll-container">
     <ul class="table-view control-content active" id="connect-new" infinite-scroll="loadMoreBizs()" infinite-scroll-distance='1' infinite-scroll-parent="true">
         <li ng-repeat="partner in connect.partners.all" business-list-item="partner" toggle-favorite="parenttoggleFavorite" is-favorite="parentIsFavorite"></li>

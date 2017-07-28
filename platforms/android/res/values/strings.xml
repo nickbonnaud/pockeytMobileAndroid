@@ -3,5 +3,7 @@
     <string name="app_name">Pockeyt</string>
     <string name="launcher_name">@string/app_name</string>
     <string name="activity_name">@string/launcher_name</string>
-    <string name="facebook_app_id">178327975910603</string>
+    <string name="account_type">com.pockeyt.account</string>
+    <string name="content_authority">com.pockeyt</string>
+    <string name="google_app_id">906488292868</string>
 </resources>

@@ -11,30 +11,23 @@
       var _identity = undefined,
           _apiResponse = undefined,
           _token = undefined,
-          _authenticated =false;
+          _authenticated = false;
 
       var isIdentityResolved = function() {
-        console.log("inside UserService is identity resolved");
-        console.log(angular.isDefined(_identity));
         return angular.isDefined(_identity);
       };
 
       var isAuthenticated = function() {
-        console.log("checking if authenticated after identity returned");
-        console.log(_authenticated);
         return _authenticated;
       };
 
       var hasErrorResponse = function() {
-        console.log(_apiResponse);
         return _apiResponse;
       };
 
       var authenticate = function(identity) {
         _identity = identity
         _authenticated = identity != null;
-        console.log(_identity);
-        console.log(_authenticated);
       };
 
       var signOut = function() {
@@ -48,23 +41,16 @@
         var deferred = $q.defer();
         if (angular.isDefined(_identity)) {
           deferred.resolve(_identity);
-          console.log(_identity);
-          console.log(deferred.promise);
           return deferred.promise;
         }
         _token = {Authorization: 'Bearer ' + $auth.getToken()};
-        console.log(_token);
         api.request('/authenticate/user', null, 'GET', _token)
           .then(function(response) {
-            console.log("setting identity from call to server");
-            console.log(response);
             _identity = response.data.user;
             _authenticated = true;
             deferred.resolve(_identity);
           })
           .catch(function(response) {
-            console.log("error in api call")
-            console.log(response);
             _identity = undefined;
             _authenticated = false;
             _apiResponse = response.data.error;
@@ -77,6 +63,24 @@
         return _identity;
       };
 
+      var updateUser = function(user) {
+        return _identity = user;
+      }
+
+      var refreshToken = function() {
+        api.request('/token/refresh', null, 'POST')
+        .then(function(response) {
+          $auth.setToken(response.data);
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+      };
+
+      var clearIdentity = function() {
+        _identity = undefined;
+      }
+
       return {
         isIdentityResolved: isIdentityResolved,
         isAuthenticated: isAuthenticated,
@@ -84,7 +88,10 @@
         authenticate: authenticate,
         identity: identity,
         signOut: signOut,
-        setUser: setUser
+        setUser: setUser,
+        updateUser: updateUser,
+        refreshToken: refreshToken,
+        clearIdentity: clearIdentity
       };
     }];
   module.factory('UserService', UserServiceFactory);

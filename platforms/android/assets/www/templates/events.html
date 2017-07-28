@@ -1,9 +1,19 @@
 <div class="view-explore view-main-section">
    <div date-picker></div>
     <div id="container" class="content-container content-scroll-container">
-        <ul class="table-view control-content active" id="explore-new" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
-            <li ng-repeat="partner in events.partners.all" event-list-item="partner" share-content="parentShareContent" toggle-bookmark="parentToggleBookmark" is-bookmark="parentIsBookmark"></li>
+
+        <ul class="table-view control-content active" id="explore-new" ng-if="!empty()">
+            <li ng-repeat="partner in events.partners.all" event-list-item="partner" share-content="parentShareContent"></li>
         </ul>
+
+        <ul class="table-view control-content active results-empty" id="explore-new" ng-if="empty()">
+            <li class="table-view-cell results-empty">
+                <strong>No registered events!</strong>
+            </li>
+        </ul>
+
+        <button ng-if="hasMore()" ng-hide="isLoading()" ng-click="loadMore()" class="btn btn-load btn-block" id="partner-feed">Load More</button>
+
         <div class="spinner" ng-show="isLoading()">
             <span us-spinner="{radius:8, width:5, length:3, lines:9}"></span>
         </div>

@@ -14,7 +14,7 @@
           window.plugins.socialsharing.shareViaEmail(
             '',
             'Contact Pockeyt',
-            ['nick.bonnaud@pockeyt.com'],
+            ['contact@pockeyt.com'],
             null,
             null,
             null

@@ -1,0 +1,17 @@
+<div class="view-my-profile view-main-section">
+	<a href="#" ui-sref="main.menu.profile"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container-profile content-scroll-container">
+		<div class="tip-rate-top-section">
+			<h3>Select a default tip rate.*</h3>
+		</div>
+		<div class="tips-main-section"">
+			<div class="tip-rate-selector-section">
+				<button ng-class="isActive(0) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(0)">10%</button><button ng-class="isActive(1) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(1)">15%</button><button ng-class="isActive(2) ? 'tips-button-active' : 'tips-button'" ng-click="toggleTip(2)">20%</button><button ng-class="isActive(3) ? 'tips-button-last-active' : 'tips-button-last'" ng-click="toggleTip(3); focusInput=true">Custom</button>
+
+				<input class="tips-custom-input" type="tel" name="field" ng-change="customInput(tip)" ng-show="isActive(3)" ng-model="tipRate" focus-me="focusInput" ui-percentage-mask="0">
+			</div>
+			<p class="tip-rate-details">*Custom tips can be specified on per transaction basis.</p>
+			<button ng-click="submitDefaultTip()" ng-disabled="clean" ng-class="isActive(3) ? 'tip-add-button-focus' : 'tip-add-button'">Set</button>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,29 @@
+<div class="view-my-profile view-main-section">
+<a href="#" ui-sref="main.menu.loyalty-program"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container-rewards content-scroll-container">
+		<div class="profile-top-section">
+			<h3 class="loyalty-business-header">{{ loyaltyCard.business_name }} Rewards Program</h3>
+			<canvas ng-if="loyaltyCard.is_increment" id="doughnut" class="chart chart-doughnut"
+			  chart-data="dataIncrement" chart-labels="labels" chart-options="options" style="display: inline-block; height: 200px; width: 200px; margin-top: 10px">
+			</canvas>
+			<canvas ng-if="!loyaltyCard.is_increment" id="doughnut" class="chart chart-doughnut"
+			  chart-data="dataAmount" chart-labels="labels" chart-options="options" style="display: inline-block; height: 200px; width: 200px; margin-top: 10px">
+			</canvas>
+			<div class="chart-inner">
+				<img class="business-loyalty-icon" ng-src="{{ loyaltyCard.business_thumb_path }}">
+			</div>
+			<p class="reward-description">Earn a {{ loyaltyCard.reward }}!</p>
+				<span class="loyalty-data-progress">
+					<span class="icon ea-icon-loyalty-progress"></span>
+					<h3 class="loyalty-box-title">Progress</h3>
+					<h3 class="loyalty-box-data" ng-if="loyaltyCard.is_increment">{{ purchasesRequired }}/{{ loyaltyCard.purchases_required }}</h3>
+					<h3 class="loyalty-box-data" ng-if="!loyaltyCard.is_increment">${{ amountRequired / 100 | number:2 }}/${{ loyaltyCard.amount_required / 100 | number:2 }}</h3>
+				</span>
+				<span class="loyalty-data-earned">
+					<span class="icon ea-icon-loyalty-rewards"></span>
+					<h3 class="loyalty-box-title">Earned</h3>
+					<h3 class="loyalty-box-data">{{ loyaltyCard.rewards_achieved }}</h3>
+				</span>
+		</div>
+	</div>
+</div>

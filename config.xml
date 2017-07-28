@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.pockeyt" version="0.1.8" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.pockeyt" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Pockeyt</name>
     <description>
-        Pockeyt finds and connects you with your favorite businesses in your city.
+        Pockeyt Smart Payments for a Smart World.
     </description>
     <author email="nick.bonnaud@pockeyt.com" href="http://pockeyt.com">
         Pockeyt
@@ -10,9 +10,7 @@
     <content src="index.html" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
     <preference name="AndroidLaunchMode" value="singleTask" />
-    <plugin name="cordova-plugin-launchkey-whitelabel" />
     <access origin="*" />
-    <access origin="*.pushwoosh.com" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -72,6 +70,7 @@
     <preference name="SplashScreenDelay" value="3000" />
     <preference name="SplashMaintainAspectRatio" value="true" />
     <preference name="DisallowOverscroll" value="true" />
+    <preference name="KeyboardDisplayRequiresUserAction" value="false" />
     <hook src="scripts/env.js" type="after_prepare" />
     <branch-config>
         <ios-team-id value="LXD2C94VJC" />
@@ -79,9 +78,9 @@
         <host name="bnc.lt" scheme="https" />
     </branch-config>
     <preference name="android-minSdkVersion" value="15" />
-    <plugin name="cordova-plugin-facebook4" spec="~1.7.1">
+    <plugin name="cordova-plugin-facebook4" spec="~1.7.4">
         <variable name="APP_ID" value="178327975910603" />
         <variable name="APP_NAME" value="Pockeyt" />
     </plugin>
-    <engine name="ios" spec="~4.2.1" />
+    <plugin name="com.phonegap.plugins.nativesettingsopener" spec="https://github.com/guyromb/Cordova-open-native-settings.git" />
 </widget>

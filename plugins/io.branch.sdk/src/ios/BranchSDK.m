@@ -9,6 +9,8 @@
 
 @interface BranchSDK()
 
+@property (strong, nonatomic) NSString *deepLinkUrl;
+
 - (void)doShareLinkResponse:(int)callbackId sendResponse:(NSDictionary*)response;
 
 @end
@@ -51,6 +53,7 @@
 {
     NSString *arg = [command.arguments objectAtIndex:0];
     NSURL *url = [NSURL URLWithString:arg];
+    self.deepLinkUrl = [url absoluteString];
 
     Branch *branch = [self getInstance];
     return [NSNumber numberWithBool:[branch handleDeepLink:url]];
@@ -64,6 +67,10 @@
 
     NSUserActivity *userActivity = [[NSUserActivity alloc] initWithActivityType:activityType];
     [userActivity setUserInfo:userInfo];
+
+    if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
+        self.deepLinkUrl = [userActivity.webpageURL absoluteString];
+    }
 
     Branch *branch = [self getInstance];
 
@@ -125,11 +132,22 @@
         if (isFromBranchLink) {
             [self.commandDelegate evalJs:[NSString stringWithFormat:@"DeepLinkHandler(%@)", resultString]];
         }
-
+        else if (self.deepLinkUrl) {
+            [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"BSDKPostUnhandledURL" object:self.deepLinkUrl]];
+        }
+        self.deepLinkUrl = nil;
+        
         if (command != nil) {
             [self.commandDelegate sendPluginResult: pluginResult callbackId: command.callbackId];
         }
     }];
+}
+
+- (void)setMixpanelToken:(CDVInvokedUrlCommand*)command
+{
+
+    [[Branch getInstance] setRequestMetadataKey:@"$mixpanel_distinct_id" value:[command.arguments objectAtIndex:0]];
+    
 }
 
 - (void)setDebug:(CDVInvokedUrlCommand*)command
@@ -142,7 +160,7 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:enableDebug];
 
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
+ }
 
 - (void)getAutoInstance:(CDVInvokedUrlCommand*)command
 {
@@ -252,12 +270,24 @@
 - (void)loadRewards:(CDVInvokedUrlCommand*)command
 {
     Branch *branch = [self getInstance];
+    NSString *bucket = @"";
+
+    if ([command.arguments count] == 1) {
+        bucket = [command.arguments objectAtIndex:0];
+    }
 
     [branch loadRewardsWithCallback:^(BOOL changed, NSError *error) {
 
         CDVPluginResult* pluginResult = nil;
         if(!error) {
-            int credits = (int)[branch getCredits];
+            int credits = 0;
+
+            if ([bucket length]) {
+                credits = (int)[branch getCreditsForBucket:bucket];
+            } else {
+                credits = (int)[branch getCredits];
+            }
+
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:credits];
         }
         else {
@@ -582,15 +612,17 @@
     // We create a JSON string result, because we're unable to handle the url. We will include the url in the return string.
     NSError *error;
     NSString *urlString;
-
-    if ([notification.object respondsToSelector:@selector(absoluteString:)]) {
+    
+//    if ([notification.object respondsToSelector:@selector(absoluteString:)]) {
+    SEL selector = NSSelectorFromString(@"absoluteString:");
+    if ([notification.object respondsToSelector:selector]) {
         urlString = [notification.object absoluteString];
     } else {
         urlString = notification.object;
     }
 
     if ([urlString isKindOfClass:[NSString class]]) {
-        NSDictionary *returnDict = [NSDictionary dictionaryWithObjectsAndKeys:@"Unable to process URL", @"error", urlString, @"url", nil];
+        NSDictionary *returnDict = [NSDictionary dictionaryWithObjectsAndKeys:@"Not a Branch link!", @"error", urlString, @"url", nil];
         NSData* returnJSON = [NSJSONSerialization dataWithJSONObject:returnDict
                                                              options:NSJSONWritingPrettyPrinted
                                                                error:&error];
@@ -620,15 +652,6 @@
 {
     id params = [command.arguments objectAtIndex:0];
     return [[self getInstance] getLongURLWithParams:params];
-}
-
-- (NSString *)getContentUrlWithParams:(CDVInvokedUrlCommand*)command
-{
-    NSDictionary *params = [command.arguments objectAtIndex:0];
-    NSString *channel = [command.arguments objectAtIndex:1];
-
-    Branch *branch = [self getInstance];
-    return [branch getContentUrlWithParams:params andChannel:channel];
 }
 
 - (void)getBranchActivityItemWithParams:(CDVInvokedUrlCommand*)command

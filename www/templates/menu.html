@@ -1,0 +1,97 @@
+<div class="view-my-profile view-main-section-menu">
+	<div id="container" class="content-container-profile content-scroll-container">
+		<ul class="table-view">
+			<li class="table-view-cell">
+				<a href="#" ui-sref=".profile" ng-if="user !== 'login' && user !== 'signup'">
+					<div class="navigate-right">
+						<img ng-if="user.photo_path" class="user-profile-thumb-menu" ng-src="{{ user.photo_path }}">
+						<span ng-if="!user.photo_path" class="profile-icon-thumb-menu"></span>
+						<p class="name-menu" ng-bind="(user.first_name) + ' ' + (user.last_name)"></p>
+					</div>
+				</a>
+				<a href="#" ui-sref=".login" ng-if="user === 'login'">
+					<div class="navigate-right">
+					<span class="profile-icon-thumb-menu"></span>
+						<p class="name-menu">Log In</p>
+					</div>
+				</a>
+				<a href="#" ui-sref=".signup" ng-if="user === 'signup'">
+					<div class="navigate-right">
+					<span class="profile-icon-thumb-menu"></span>
+						<p class="name-menu">Log In</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="!billOpen.billSent && billOpen" class="table-view-cell">
+				<a href="#" ui-sref=".bill">
+					<div class="navigate-right">
+						<span class="icon ea-icon-receipt-menu"></span>
+						<p class="name-menu">Current Bill</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="billOpen.billSent" class="table-view-cell">
+				<a href="#" ui-sref=".bill">
+					<div class="navigate-right">
+						<span class="icon ea-icon-receipt-menu"></span>
+						<p class="name-menu">Pay Current Bill</p>
+					</div>
+				</a>
+			</li>
+			<div class="separator"></div>
+
+			<li ng-if="user.default_tip_rate" class="table-view-cell" style="border-top: 1px solid #ddd;">
+				<a href="#" ui-sref=".location-settings">
+					<div class="navigate-right">
+						<span class="icon ea-icon-location-menu"></span>
+						<p class="name-menu">Location Settings</p>
+					</div>
+				</a>
+			</li>
+			<li class="table-view-cell">
+				<a href="#" ui-sref=".bookmark">
+					<div class="navigate-right">
+						<span class="icon ea-icon-bookmark-menu"></span>
+						<p class="name-menu">Bookmarked Posts</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="user.default_tip_rate" class="table-view-cell">
+				<a href="#" ui-sref=".recent-transactions">
+					<div class="navigate-right">
+						<span class="icon ea-icon-transactions-menu"></span>
+						<p class="name-menu">Recent Transactions</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="user.default_tip_rate" class="table-view-cell">
+				<a href="#" ui-sref=".deals">
+					<div class="navigate-right">
+						<span class="icon ea-icon-deals-menu"></span>
+						<p class="name-menu">Purchased Deals</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="user.default_tip_rate" class="table-view-cell">
+				<a href="#" ui-sref=".loyalty-program">
+					<div class="navigate-right">
+						<span class="icon ea-icon-loyalty-menu"></span>
+						<p class="name-menu">Loyalty Program</p>
+					</div>
+				</a>
+			</li>
+			<li ng-if="user.default_tip_rate" class="table-view-cell" ng-click="sendInvite()">
+				<span class="icon ea-icon-invite-menu"></span>
+				<p class="name-menu">Send Pockeyt Pay Invite</p>
+			</li>
+			<li class="table-view-cell" ng-click="emailUs()">
+				<span class="icon ea-icon-contact-menu"></span>
+				<p class="name-menu">Contact Pockeyt</p>
+			</li>
+			<li ng-if="user !== 'login' && user !== 'signup'" class="table-view-cell" ng-click="signOut()">
+				<span class="icon ea-icon-signout-menu"></span>
+				<p class="name-menu">Log Out</p>
+			</li>
+		</ul>
+	</div>
+</div>

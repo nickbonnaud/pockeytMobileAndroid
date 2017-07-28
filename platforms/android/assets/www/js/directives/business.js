@@ -8,7 +8,6 @@
       restrict: 'AE',
       scope: {
         partner: '=businessListItem',
-        'shareContent': '&',
         'toggleFavorite': '&',
         'isFavorite': '&'
       },

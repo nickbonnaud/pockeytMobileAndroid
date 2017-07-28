@@ -1,4 +1,5 @@
 <div class="view-my-profile view-main-section">
+	<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
 	<div id="container" class="content-container-profile content-scroll-container">
 		<div class="profile-top-section">
 			<img ng-if="user.photo_path" class="user-profile" ng-src="{{ user.photo_path }}">
@@ -7,22 +8,30 @@
 			<a href="#" ui-sref=".edit">EDIT ACCOUNT</a>
 		</div>
 		<div class="profile-info">
+
 			<p class="info-title">Email</p>
 			<span>
 				<p class="user-info" ng-bind="user.email"></p>
 			</span>
+
 			<p class="info-title">Payment</p>
 			<span>
 				<div ng-if="user.customer_id !== null" class="user-info-card">
-					<img class="card-image" ng-src="{{ user.cardImageUrl }}">
-					<p class="card-details" ng-bind="'**** **** **** ' + (user.cardLast4)"></p>
-					<span ng-click="editPayment()" class="edit-card">Change</span>
+					<img class="{{ 'icon-' + user.card_type }}">
+					<p class="card-details" ng-bind="'**** **** **** ' + (user.last_four_card)"></p>
+					<span ng-click="addPayment()" class="edit-card">Change</span>
 				</div>
 				<p ng-if="user.customer_id == null" ng-click="addPayment()" class="user-info-pay">Add Payment</p>
 			</span>
-<!-- 			<span class="sign-out-tab">
-				<p class="user-info-signout" ng-click="signOut()">Sign Out</p>
-			</span> -->
+
+			<p class="info-title">Default Tip Rate</p>
+			<span>
+				<div ng-if="user.default_tip_rate !== null" class="user-info-card">
+					<p class="tip-rate-show" ng-bind="user.default_tip_rate + '%'"></p>
+					<span ui-sref=".tip-select" class="edit-tip-rate">Change</span>
+				</div>
+				<p ng-if="user.default_tip_rate === null" ui-sref=".tip-select"  class="user-info-pay">Add</p>
+			</span>
 		</div>
 	</div>
 </div>

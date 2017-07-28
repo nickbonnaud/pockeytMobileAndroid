@@ -1,0 +1,24 @@
+<div class="view-my-profile view-main-section">
+<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container-profile content-scroll-container">
+		<ul class="table-view location-settings-ul">
+			<li ng-show="geoSettingPhone" class="table-view-cell location-settings-li">
+				Geofence Tracking
+				<div ng-class="toggle ? 'toggle active' : 'toggle'">
+					<div class="toggle-handle"></div>
+				</div>
+			</li>
+			<li ng-show="!geoSettingPhone" ng-click="showLocationServices()" class="table-view-cell location-settings-li">
+					<div><a href="#">Turn on Location Services</a></div>
+			</li>
+		</ul>
+		<p class="location-settings-text">Geofence Tracking is necessary for Pockeyt Payments to work. If Location Services are on in your phone's settings, turning off Geofence Tracking will temporarily pause tracking. Geofence Tracking will resume on app restart.</p>
+		<div ng-show="geoSettingPhone" class="location-section-button">
+			<button ng-click="getLocation()" class="btn location-button">
+			  <i class="icon ea-icon-location-button"></i>
+			  Fix Location
+			</button>
+		</div>
+		<p ng-show="geoSettingPhone" class="location-settings-text">Not appearing in your current location? Use Fix Location to get a high accuracy location update.</p>
+	</div>
+</div>

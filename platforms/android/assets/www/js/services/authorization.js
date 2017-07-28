@@ -10,21 +10,20 @@
     function($rootScope, $state, $location, UserService) {
 
       var authorize = function() {
-        console.log(UserService.identity());
         return UserService.identity()
           .then(function() {
             var isAuthenticated = UserService.isAuthenticated();
             if (!isAuthenticated) {
-              $rootScope.returnToState = $rootScope.toState;
-              $rootScope.returnToStateParams = $rootScope.toStateParams;
               if (UserService.hasErrorResponse() === "token_not_provided") {
-                $state.go('main.signup');
+                var _identity = "signup";
+                return _identity;
               } else {
-                $state.go('main.login');
+                var _identity = "login";
+                return _identity;
               }
+            } else {
+              return UserService.setUser();
             }
-            console.log(UserService.setUser());
-            return UserService.setUser();
           });
       };
       return {

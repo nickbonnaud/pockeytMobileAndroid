@@ -1,0 +1,32 @@
+<div class="view-my-pockeyt view-main-section">
+	<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container content-scroll-container">
+		<ul class="table-view" ng-if="!empty() && hasMore()" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
+			<li ng-repeat="transaction in transactions" class="table-view-cell">
+				<a href="#" ui-sref=".recent-transaction({'transaction': transaction})">
+					<div class="navigate-right">
+						<img class="user-profile-thumb-menu" ng-src="{{ transaction.business_logo }}">
+						<p class="name-menu" ng-bind="transaction.business_name"></p>
+						<p class="name-menu-date" ng-bind="transaction.updated_at.toDateString()"></p>
+					</div>
+				</a>
+			</li>
+		</ul>
+		<ul class="table-view" ng-if="!empty() && !hasMore()">
+			<li ng-repeat="transaction in transactions" class="table-view-cell">
+				<a href="#" ui-sref=".recent-transaction({'transaction': transaction})">
+					<div class="navigate-right">
+						<img class="user-profile-thumb-menu" ng-src="{{ transaction.business_logo }}">
+						<p class="name-menu" ng-bind="transaction.business_name"></p>
+						<p class="name-menu-date" ng-bind="transaction.updated_at.toDateString()"></p>
+					</div>
+				</a>
+			</li>
+		</ul>
+	 	<ul class="table-view" ng-if="empty()">
+      <li class="table-view-cell results-empty">
+        <strong>No Recent Transactions</strong>
+      </li>
+    </ul>
+	</div>
+</div>

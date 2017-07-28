@@ -1,22 +1,8 @@
 (function(angular, moment) {
 
-  var module = angular.module('pockeyt.repositories.partners', ['pockeyt.models.partner', 'pockeyt.services.whitelabel', 'pockeyt.services.api']);
+  var module = angular.module('pockeyt.repositories.partners', ['pockeyt.models.partner', 'pockeyt.services.api']);
 
-  // module.filter(
-  //     'partners_are',
-  //     function() {
-  //       return function(partners, prop, invert) {
-  //         if(typeof prop !== 'string') throw new TypeError('prop argument to partners_are filter must be string');
-
-  //         return partners.filter(function(element, index, arr) {
-  //           var is = element[prop];
-  //           return (!invert && !!is) || (!!invert && !is);
-  //         });
-  //       }
-  //     }
-  // );
-
-  module.factory('partnersRepository', ['$q', '$rootScope', 'Partner', 'whitelabel', 'PockeytApi', function($q, $rootScope, Partner, whitelabel, api) {
+  module.factory('partnersRepository', ['$q', 'Partner', 'PockeytApi', function($q, Partner, api) {
 
     var repository = {
       _stale: true,
@@ -25,74 +11,64 @@
       page: 1,
       hasMore: true,
       isLoading: false,
-      search: null,
-      noResults: false,
-      searchActive: false,
-
-      doSearch: function (search) {
-        this.searchActive = true;
-        this.hasMore = true;
-        this.page = 1;
-        this._cache = [];
-        this.search = search.input;
-        this.loadSearch(search);
-      },
-
-      _transformFeed: function(posts) {
-        return {
-          id: posts.id,
-          date: moment.utc(posts.published_at).local().toDate(),
-          title: posts.title,
-          body: posts.formatted_body,
-          photo_url: posts.photo_path
-        };
-      },
 
       _transformPost: function(post) {
-        return {
-          id: post.post_id,
-          date: moment.utc(post.published_at.date).local().toDate(),
-          title: post.title,
-          body: post.body,
-          name: post.business_name,
-          thumbnail_url: post.thumbnail_url,
-          photo_url: post.photo_url,
-          business_id: post.id,
-          url: post.website,
-          review_url: post.review_url,
-          review_intro: post.review_intro,
-          logo: post.logo ? post.logo : '',
-          hero: post.hero ? post.hero : '',
-          tags: post.tags,
-          connected: false,
-          featured: post.featured || false,
-          feed: post.posts.map(this._transformFeed.bind(this)),
-          info: post.formatted_description,
-        };
-      },
-
-      _transformProfile: function(profile) {
-        return {
-          id: profile.id,
-          business_id: profile.id,
-          name: profile.business_name,
-          url: profile.website,
-          review_url: profile.review_url,
-          review_intro: profile.review_intro,
-          logo: profile.logo ? profile.logo : '',
-          hero: profile.hero ? profile.hero : '',
-          tags: profile.tags,
-          connected: false,
-          featured: profile.featured || false,
-          feed: profile.posts.map(this._transformFeed.bind(this)),
-          info: profile.formatted_description,
-        };
+        if (post.is_redeemable) {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            is_redeemable: post.is_redeemable,
+            deal_item: post.deal_item,
+            price: post.price,
+            end_date: post.end_date,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        } else if (post.event_date && post.event_date != '0000-00-00') {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            event_date: post.event_date,
+            is_redeemable: post.is_redeemable,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        } else {
+          return {
+            id: post.id,
+            business_id: post.profile_id,
+            business_name: post.business_name,
+            message: post.message,
+            post_photo: post.photo_url,
+            date: moment.utc(post.published_at.date).local().toDate(),
+            is_redeemable: post.is_redeemable,
+            logo: post.logo ? post.logo : '',
+            tags: post.tags,
+            url: post.website,
+            info: post.formatted_description,
+            hero: post.hero ? post.hero : '',
+          };
+        }
       },
 
       _findInCache: function(id) {
         for(var i = 0; i < this._cache.length; i++) {
           if(this._cache[i].id == id) {
-            return this.fix(this._cache[i]);
+            return this._cache[i];
           }
         }
 
@@ -119,42 +95,12 @@
         }
       },
 
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fix: function(partner) {
-        return $q(function(resolve, reject) {
-          whitelabel.checkForActiveSessions(function(data) {
-            partner.unlocked = data.result;
-            resolve(partner);
-          }.bind(this), function(message) {
-            reject(new Error(message));
-          });
-        }.bind(this));
-      },
-
-      /**
-       *
-       * @param {Partner} partner
-       * @return {$q}
-       */
-      fixAll: function(partner) {
-        var promises = this._cache.reduce(function(previous, current) {
-          previous.push(this.fix(current));
-          return previous;
-        }.bind(this), []);
-
-        return $q.all(promises);
-      },
-
       reload: function() {
         if (this.hasMore && !this.isLoading) {
           this.isLoading = true;
           var page = this.page;
 
-          return api.request('/postsv1?page=' + page).then(function(response) {
+          return api.request('/v2/posts?page=' + page).then(function(response) {
             if (!response.data.meta.pagination.links.next) {
               this.hasMore = false;
              }
@@ -185,54 +131,7 @@
       loadMore: function() {
         if (repository.hasMore && !repository.isLoading) {
           this.page += 1;
-          if(this.search === null || this.search === "") {
-            this.reload();
-          } else {
-            return this.loadSearch(this.search);
-          }
-        }
-      },
-
-      loadSearch: function(search) {
-        this.noResults = false;
-        this.search = search;
-        if (search === "") {
-          search = null;
-          this.searchActive = false;
-          return this.reload();
-        }
-
-        if (this.hasMore && !this.isLoading) {
-          this.isLoading = true;
-          var page = this.page;
-          return api.request('/search?input=' + search + '&page=' + page).then(function(response) {
-            if (!response.data.meta.pagination.links.next) {
-              this.hasMore = false;
-              this.search = null;
-             }
-             if (!response.data.meta.pagination.count) {
-              this.noResults = true;
-             }
-            var promises = response.data.data
-                .map(this._transformProfile.bind(this))
-                .map(function(partnerData) {
-                  return this.find(partnerData.id, false, true).then(function(partner) {
-                    return $q.resolve({data: partnerData, partner: partner});
-                  });
-                }.bind(this));
-            return $q.all(promises)
-                .then(function(descriptors) {
-                  angular.forEach(descriptors, function(descriptor) {
-                    if(descriptor.partner == null) {
-                      this._cache.push(new Partner(descriptor.data));
-                    } else {
-                      descriptor.partner.fill(descriptor.data);
-                    }
-                  }.bind(this));
-                  this.isLoading = false;
-                  return this._cache;
-                }.bind(this));
-          }.bind(this));
+          this.reload();
         }
       },
 
@@ -240,26 +139,13 @@
         this._cache = [];
         this.page = 1;
         this.hasMore = true;
-        this.searchActive = false;
         return this.reload();
       },
 
       allCached: function() {
         return this._cache;
       },
-
-      allUnlocked: function() {
-        this._unlocked.length = 0;
-        this._cache.forEach(function(partner) {
-          if(partner.unlocked === true) this._unlocked.push(partner);
-        }.bind(this));
-        return this._unlocked;
-      }
     };
-
-    $rootScope.$on('whitelabel.logout', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.success', repository.fixAll.bind(repository));
-    $rootScope.$on('whitelabel.authentication.failure', whitelabel.logout.bind(whitelabel, repository.fixAll.bind(repository)));
 
     return repository;
 

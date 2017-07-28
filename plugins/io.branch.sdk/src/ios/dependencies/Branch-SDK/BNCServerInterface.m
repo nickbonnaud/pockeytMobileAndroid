@@ -18,6 +18,9 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
 
 @implementation BNCServerInterface
 
+NSDate *startTime;
+NSString *requestEndpoint;
+
 #pragma mark - GET methods
 
 - (void)getRequest:(NSDictionary *)params url:(NSString *)url key:(NSString *)key callback:(BNCServerCallback)callback {
@@ -59,9 +62,12 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
 - (void)postRequest:(NSDictionary *)post url:(NSString *)url retryNumber:(NSInteger)retryNumber key:(NSString *)key log:(BOOL)log callback:(BNCServerCallback)callback {
     NSDictionary *extendedParams = [self updateDeviceInfoToParams:post];
     NSURLRequest *request = [self preparePostRequest:extendedParams url:url key:key retryNumber:retryNumber log:log];
+    
+    // Instrumentation metrics
+    requestEndpoint = [self.preferenceHelper getEndpointFromURL:url];
 
     [self genericHTTPRequest:request retryNumber:retryNumber log:log callback:callback retryHandler:^NSURLRequest *(NSInteger lastRetryNumber) {
-        return [self preparePostRequest:post url:url key:key retryNumber:++lastRetryNumber log:log];
+        return [self preparePostRequest:extendedParams url:url key:key retryNumber:++lastRetryNumber log:log];
     }];
 }
 
@@ -87,7 +93,11 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
     NSURLSessionCompletionHandler = ^void(NSData *data, NSURLResponse *response, NSError *error) {
         BNCServerResponse *serverResponse = [self processServerResponse:response data:data error:error log:log];
         NSInteger status = [serverResponse.statusCode integerValue];
-        BOOL isRetryableStatusCode = status >= 500;
+        // If the phone is in a poor network condition,
+        // iOS will return statuses such as -1001, -1003, -1200, -9806
+        // indicating various parts of the HTTP post failed.
+        // We should retry in those conditions in addition to the case where the server returns a 500
+        BOOL isRetryableStatusCode = status >= 500 || status < 0;
         
         // Retry the request if appropriate
         if (retryNumber < self.preferenceHelper.retryCount && isRetryableStatusCode) {
@@ -114,7 +124,11 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
                 error = [NSError errorWithDomain:BNCErrorDomain code:BNCDuplicateResourceError userInfo:@{ NSLocalizedDescriptionKey: @"A resource with this identifier already exists" }];
             }
             else if (status >= 400) {
-                NSString *errorString = [serverResponse.data objectForKey:@"error"] ?: @"The request was invalid.";
+                NSString *errorString = @"The request was invalid.";
+                
+                if ([serverResponse.data objectForKey:@"error"] && [[serverResponse.data objectForKey:@"error"] isKindOfClass:[NSString class]]) {
+                    errorString = [serverResponse.data objectForKey:@"error"];
+                }
                 
                 error = [NSError errorWithDomain:BNCErrorDomain code:BNCBadRequestError userInfo:@{ NSLocalizedDescriptionKey: errorString }];
             }
@@ -135,6 +149,9 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
         NSURLSessionCompletionHandler(responseData, response, error);
     };
     
+    // start the reqeust timer here. This will account for retries.
+    startTime = [NSDate date];
+
     // NSURLSession is available in iOS 7 and above
     if (NSFoundationVersionNumber >= NSFoundationVersionNumber_iOS_7_0) {
         NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
@@ -174,7 +191,7 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
 #pragma mark - Internals
 
 - (NSURLRequest *)prepareGetRequest:(NSDictionary *)params url:(NSString *)url key:(NSString *)key retryNumber:(NSInteger)retryNumber log:(BOOL)log {
-    NSDictionary *preparedParams = [self prepareParamDict:params key:key retryNumber:retryNumber];
+    NSDictionary *preparedParams = [self prepareParamDict:params key:key retryNumber:retryNumber requestType:@"GET"];
     
     NSString *requestUrlString = [NSString stringWithFormat:@"%@%@", url, [BNCEncodingUtils encodeDictionaryToQueryString:preparedParams]];
     
@@ -191,7 +208,7 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
 }
 
 - (NSURLRequest *)preparePostRequest:(NSDictionary *)params url:(NSString *)url key:(NSString *)key retryNumber:(NSInteger)retryNumber log:(BOOL)log {
-    NSDictionary *preparedParams = [self prepareParamDict:params key:key retryNumber:retryNumber];
+    NSDictionary *preparedParams = [self prepareParamDict:params key:key retryNumber:retryNumber requestType:@"POST"];
 
     NSData *postData = [BNCEncodingUtils encodeDictionaryToJsonData:preparedParams];
     NSString *postLength = [NSString stringWithFormat:@"%lu", (unsigned long)[postData length]];
@@ -211,24 +228,29 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
     return request;
 }
 
-- (NSDictionary *)prepareParamDict:(NSDictionary *)params key:(NSString *)key retryNumber:(NSInteger)retryNumber {
+- (NSDictionary *)prepareParamDict:(NSDictionary *)params key:(NSString *)key retryNumber:(NSInteger)retryNumber requestType:(NSString *)reqType {
     NSMutableDictionary *fullParamDict = [[NSMutableDictionary alloc] init];
     [fullParamDict addEntriesFromDictionary:params];
     fullParamDict[@"sdk"] = [NSString stringWithFormat:@"ios%@", SDK_VERSION];
-    fullParamDict[@"retryNumber"] = @(retryNumber);
     
+    // using rangeOfString instead of containsString to support devices running pre iOS 8
+    if ([[[NSBundle mainBundle] executablePath] rangeOfString:@".appex/"].location != NSNotFound) {
+        fullParamDict[@"ios_extension"] = @(1);
+    }
+    fullParamDict[@"retryNumber"] = @(retryNumber);
+    fullParamDict[@"branch_key"] = key;
+
     NSMutableDictionary *metadata = [[NSMutableDictionary alloc] init];
     [metadata addEntriesFromDictionary:self.preferenceHelper.requestMetadataDictionary];
     [metadata addEntriesFromDictionary:fullParamDict[BRANCH_REQUEST_KEY_STATE]];
-    fullParamDict[BRANCH_REQUEST_KEY_STATE] = metadata;
-    
-    if ([key hasPrefix:@"key_"]) {
-        fullParamDict[@"branch_key"] = key;
+    if (metadata.count) {
+        fullParamDict[BRANCH_REQUEST_KEY_STATE] = metadata;
     }
-    else {
-        fullParamDict[@"app_id"] = key;
+    // we only send instrumentation info in the POST body request
+    if (self.preferenceHelper.instrumentationDictionary.count && [reqType isEqualToString:@"POST"]) {
+        fullParamDict[BRANCH_REQUEST_KEY_INSTRUMENTATION] = self.preferenceHelper.instrumentationDictionary;
     }
-    
+   
     return fullParamDict;
 }
 
@@ -248,9 +270,18 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
         [self.preferenceHelper log:FILE_NAME line:LINE_NUM message:@"returned = %@", serverResponse];
     }
     
+    [self collectInstrumentationMetrics];
     return serverResponse;
 }
 
+- (void) collectInstrumentationMetrics {
+    // multiplying by negative because startTime happened in the past
+    NSTimeInterval elapsedTime = [startTime timeIntervalSinceNow] * -1000.0;
+    NSString *lastRoundTripTime = [[NSNumber numberWithDouble:floor(elapsedTime)] stringValue];
+    NSString * brttKey = [NSString stringWithFormat:@"%@-brtt", requestEndpoint];
+    [self.preferenceHelper clearInstrumentationDictionary];
+    [self.preferenceHelper addInstrumentationDictionaryKey:brttKey value:lastRoundTripTime];
+}
 - (void)updateDeviceInfoToMutableDictionary:(NSMutableDictionary *)dict {
     BNCDeviceInfo *deviceInfo  = [BNCDeviceInfo getInstance];
    
@@ -267,7 +298,11 @@ void (^NSURLConnectionCompletionHandler) (NSURLResponse *response, NSData *respo
     [self safeSetValue:deviceInfo.osVersion forKey:BRANCH_REQUEST_KEY_OS_VERSION onDict:dict];
     [self safeSetValue:deviceInfo.screenWidth forKey:BRANCH_REQUEST_KEY_SCREEN_WIDTH onDict:dict];
     [self safeSetValue:deviceInfo.screenHeight forKey:BRANCH_REQUEST_KEY_SCREEN_HEIGHT onDict:dict];
-    
+
+    [self safeSetValue:deviceInfo.browserUserAgent forKey:@"user_agent" onDict:dict];
+    [self safeSetValue:deviceInfo.country forKey:@"country" onDict:dict];
+    [self safeSetValue:deviceInfo.language forKey:@"language" onDict:dict];
+
     dict[BRANCH_REQUEST_KEY_AD_TRACKING_ENABLED] = @(deviceInfo.isAdTrackingEnabled);
     
 }

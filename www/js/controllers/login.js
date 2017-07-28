@@ -1,18 +1,41 @@
 (function(angular) {
-  var pockeyt = angular.module('pockeyt.controllers.login', ['pockeyt.services.api', 'pockeyt.services.pouch-database']);
+  var pockeyt = angular.module('pockeyt.controllers.login', ['pockeyt.services.api', 'pockeyt.services.bg-geolocate', 'pockeyt.services.user-service']);
 
-  var LoginController = function($scope, $auth, $state, api, PouchDatabase) {
+  var LoginController = function($scope, $auth, $state, api, bgGeolocate, UserService) {
     $scope.login = function() {
-      $auth.login($scope.user)
+      var user = {
+        email: $scope.user.email,
+        password: $scope.user.password
+      };
+      $auth.login(user)
         .then(function(response) {
-          $rootScope.userId = response.data.user.id;
-          PouchDatabase.storeData(response.data);
           $auth.setToken(response.data.user.token);
-          $state.go('main.profile', {}, {reload: true});
+          return UserService.identity()
+          .then(function(identity) {
+            console.log(identity);
+            if ((angular.isDefined(identity)) && (identity.customer_id !== null)) {
+              if (identity.default_tip_rate !== null) {
+                bgGeolocate.initGeo();
+                return $state.go('main.menu.profile', {}, {reload: true});
+              } else {
+                navigator.notification.alert(
+                  'You have set your payment method but have not specified a default tip rate. Please set to continue.',
+                  function() {
+                    $state.go('main.menu.profile.tip-select');
+                  },
+                  'Set Default Tip',
+                  'Set Rate'
+                );
+                return $state.go('main.menu.profile', {}, {reload: true});
+              }
+            } else {
+              return $state.go('main.menu.profile', {}, {reload: true});
+            }
+          });
         })
         .catch(function(error) {
           if (error.status === 401) {
-            window.plugins.toast.showWithOptions({
+            return window.plugins.toast.showWithOptions({
               message: "oops! Your password or email is incorrect",
               duration: "short",
               position: "center",
@@ -21,7 +44,7 @@
               }
             });
           } else {
-            window.plugins.toast.showWithOptions({
+            return window.plugins.toast.showWithOptions({
               message: "oops! Something went wrong. Try again",
               duration: "short",
               position: "center",
@@ -38,24 +61,58 @@
           var fbID = { fbID: userData.authResponse.userID};
           return api.request('/authenticate', fbID, 'POST')
             .then(function(response) {
-                $rootScope.userId = response.data.user.id;
-                PouchDatabase.storeData(response.data);
                 $auth.setToken(response.data.user.token);
-                $state.go('main.profile', {}, {reload: true});
-            })
+                return UserService.identity()
+                .then(function(identity) {
+                  if ((angular.isDefined(identity)) && (identity.customer_id !== null)) {
+                    if (identity.default_tip_rate !== null) {
+                      bgGeolocate.initGeo();
+                      return $state.go('main.menu.profile', {}, {reload: true});
+                    } else {
+                      navigator.notification.alert(
+                        'You have set your payment method but have not specified a default tip rate. Please set to continue.',
+                        function() {
+                          $state.go('main.menu.profile.tip-select');
+                        },
+                        'Set Default Tip',
+                        'Set Rate'
+                      );
+                      return $state.go('main.menu.profile', {}, {reload: true});
+                    }
+                  } else {
+                    return $state.go('main.menu.profile', {}, {reload: true});
+                  }
+                });
+            });
         } else {
           var fbLoginSuccess = function (userData) {
-            console.log(userData);
             facebookConnectPlugin.getAccessToken(function(token) {
               $scope.fbToken = { token : token };
               return api.request('/facebook', $scope.fbToken, 'POST')
                 .then(function(response) {
-                  console.log(response);
-                  $rootScope.userId = response.data.user.id;
-                  PouchDatabase.storeData(response.data);
-                  auth.setToken(response.data.user.token);
-                  $state.go('main.profile', {}, {reload: true});
-                })
+                  $auth.setToken(response.data.user.token);
+                  return UserService.identity()
+                  .then(function(identity) {
+                    if ((angular.isDefined(identity)) && (identity.customer_id !== null)) {
+                      if (identity.default_tip_rate !== null) {
+                        bgGeolocate.initGeo();
+                        return $state.go('main.menu.profile', {}, {reload: true});
+                      } else {
+                        navigator.notification.alert(
+                          'You have set your payment method but have not specified a default tip rate. Please set to continue.',
+                          function() {
+                            $state.go('main.menu.profile.tip-select');
+                          },
+                          'Set Default Tip',
+                          'Set Rate'
+                        );
+                        return $state.go('main.menu.profile', {}, {reload: true});
+                      }
+                    } else {
+                      return $state.go('main.menu.profile', {}, {reload: true});
+                    }
+                  });
+                });
             });
           };
           facebookConnectPlugin.login(['email', 'public_profile'], fbLoginSuccess,
@@ -67,5 +124,5 @@
       });
     };
   };
-  pockeyt.controller('LoginController', ['$scope', '$auth', '$state', 'PockeytApi', 'PouchDatabase', LoginController]);
+  pockeyt.controller('LoginController', ['$scope', '$auth', '$state', 'PockeytApi', 'bgGeolocate', 'UserService', LoginController]);
 })(angular);

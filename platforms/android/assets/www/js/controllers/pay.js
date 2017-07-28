@@ -8,9 +8,7 @@
     $scope.openPayForm = function() {
     	return api.request('/token/client')
     		.then(function(response) {
-    			console.log(response.data.clientToken);
     			var token = response.data.clientToken;
-
     			BraintreePlugin.initialize(token,
 					  function () { console.log("init OK!"); },
 					  function (error) { console.error(error); 
@@ -23,17 +21,13 @@
 					};
 
     			BraintreePlugin.presentDropInPaymentUI(options, function (result) {
-						console.log('inside UI dropin');
 					    if (result.userCancelled) {
 					        console.debug("User cancelled payment dialog.");
 					    }
 					    else {
-					        console.info("User completed payment dialog.");
-					        console.info("Payment Nonce: " + result.nonce);
-					        console.debug("Payment Result.", result);
+					    	console.log('completed');
 					    }
 					});
-
     		})
     		.catch(function(response) {
     			console.log(response);

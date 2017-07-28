@@ -1,0 +1,27 @@
+<div class="view-my-pockeyt view-main-section">
+<a ng-if="prevState == 'explore'" href="#" ui-sref="main.explore"><span ng-class="checkDevice()"></span></a>
+<a ng-if="prevState == 'my-pockeyt'" href="#" ui-sref="main.my-pockeyt"><span ng-class="checkDevice()"></span></a>
+  <div id="container" class="content-container content-scroll-container">
+    <div class="post-header">
+      <span><img class="media-object pull-left partnerlogo-deal" ng-src="{{deal.logo}}"></span>
+      <p class="partnername-deal" ng-bind="deal.business_name"></p>
+    </div>
+    <div class="media-body deal-body">
+      <p class="deal_not_redeemed">Purchase this post before {{ deal.end_date | date }} to receive a {{ deal.deal_item }}.</p>
+    </div>
+    <div class="post-image">
+      <img ng-hide="!deal.post_photo" class="media-object postimage" ng-src="{{deal.post_photo}}">
+    </div>
+    <div class="post-footer-deal">
+      <p hm-read-more
+            hm-text="{{ deal.message }}" 
+            hm-limit="200" 
+            hm-more-text="more" 
+            hm-less-text="less"
+            hm-dots-class="postdate"
+            hm-link-class="postdate"> 
+        </p>
+    </div>
+    <button ng-click="purchasePost(deal)" class="deal-pay-button">Purchase</button>
+  </div>
+</div>

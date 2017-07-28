@@ -1,13 +1,15 @@
+'use strict';
+
 /*
 Parser for config.xml file. Read plugin-specific preferences (from <branch-config> tag) as JSON object.
 */
-(function() {
+(function () {
 
   var path = require('path'),
-    fs = require('fs'),
-    xml2js = require('xml2js'),
-    ConfigXmlHelper = require('./configXmlHelper.js'),
-    DEFAULT_SCHEME = 'http';
+      fs = require('fs'),
+      xml2js = require('xml2js'),
+      ConfigXmlHelper = require('./configXmlHelper.js'),
+      DEFAULT_SCHEME = 'http';
 
   module.exports = {
     readPreferences: readPreferences
@@ -50,7 +52,7 @@ Parser for config.xml file. Read plugin-specific preferences (from <branch-confi
     return {
       'hosts': hosts,
       'iosTeamId': iosTeamId,
-      'androidPrefix' : androidPrefix
+      'androidPrefix': androidPrefix
     };
   }
 
@@ -89,7 +91,7 @@ Parser for config.xml file. Read plugin-specific preferences (from <branch-confi
       return [];
     }
 
-    xmlHostList.forEach(function(xmlElement) {
+    xmlHostList.forEach(function (xmlElement) {
       var host = constructHostEntry(xmlElement);
       if (host) {
         hostsList.push(host);
@@ -107,10 +109,10 @@ Parser for config.xml file. Read plugin-specific preferences (from <branch-confi
    */
   function constructHostEntry(xmlElement) {
     var host = {
-        scheme: DEFAULT_SCHEME,
-        name: ''
-      },
-      hostProperties = xmlElement['$'];
+      scheme: DEFAULT_SCHEME,
+      name: ''
+    },
+        hostProperties = xmlElement['$'];
 
     if (hostProperties == null || hostProperties.length == 0) {
       return null;
@@ -128,5 +130,4 @@ Parser for config.xml file. Read plugin-specific preferences (from <branch-confi
   }
 
   // endregion
-
 })();

@@ -1,0 +1,27 @@
+<div class="view-my-profile view-main-section">
+<a href="#" ui-sref="main.menu.deals"><span ng-class="checkDevice()"></span></a>
+  <div id="container" class="content-container-profile content-scroll-container">
+    <div class="post-header">
+      <span><img class="media-object pull-left partnerlogo-deal" ng-src="{{deal.business_thumb_path}}"></span>
+      <p class="partnername-deal" ng-bind="deal.business_name"></p>
+    </div>
+    <div class="media-body deal-body">
+      <p class="deal_not_redeemed" ng-if="!deal.redeemed">Redeem for: {{ deal.deal_item }} by <b>{{ deal.end_date.toDateString() }}</b></p>
+      <p class="deal_redeemed" ng-if="deal.redeemed">Redeemed!</p>
+    </div>
+    <div class="post-image">
+      <img ng-hide="!deal.post_photo_path" class="media-object postimage" ng-src="{{deal.post_photo_path}}">
+    </div>
+    <div class="post-footer-deal">
+      <p class="deal-message" hm-read-more
+            hm-text="{{ deal.message }}" 
+            hm-limit="200" 
+            hm-more-text="more" 
+            hm-less-text="less"
+            hm-dots-class="postdate"
+            hm-link-class="postdate"> 
+        </p>
+      <p class="deal_purhcase_on">Purchased on: <b>{{ deal.purchased_on.toDateString() }} for ${{ deal.price | number:2 }}</b></p>
+    </div>
+  </div>
+</div>

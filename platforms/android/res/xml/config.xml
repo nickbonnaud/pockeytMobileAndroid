@@ -1,20 +1,45 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.pockeyt" version="0.1.8" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <preference name="loglevel" value="DEBUG" />
+<widget id="com.pockeyt" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <feature name="NativeSettings">
+        <param name="android-package" value="com.phonegap.plugins.nativesettings.NativeSettings" />
+    </feature>
+    <feature name="ActionSheet">
+        <param name="android-package" value="nl.xservices.plugins.actionsheet.ActionSheet" />
+    </feature>
+    <feature name="BraintreePlugin">
+        <param name="android-package" value="net.justincredible.BraintreePlugin" />
+    </feature>
     <feature name="Device">
         <param name="android-package" value="org.apache.cordova.device.Device" />
     </feature>
     <feature name="Notification">
         <param name="android-package" value="org.apache.cordova.dialogs.Notification" />
     </feature>
+    <feature name="FacebookConnectPlugin">
+        <param name="android-package" value="org.apache.cordova.facebook.ConnectPlugin" />
+        <param name="onload" value="true" />
+    </feature>
+    <access origin="https://m.facebook.com" />
+    <access origin="https://graph.facebook.com" />
+    <access origin="https://api.facebook.com" />
+    <access origin="https://*.fbcdn.net" />
+    <access origin="https://*.akamaihd.net" />
+    <feature name="File">
+        <param name="android-package" value="org.apache.cordova.file.FileUtils" />
+        <param name="onload" value="true" />
+    </feature>
+    <allow-navigation href="cdvfile:*" />
     <feature name="UniversalAnalytics">
         <param name="android-package" value="com.danielcwilson.plugins.analytics.UniversalAnalyticsPlugin" />
     </feature>
     <feature name="InAppBrowser">
         <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
     </feature>
+    <feature name="BackgroundGeolocation">
+        <param name="android-package" value="com.tenforwardconsulting.cordova.BackgroundGeolocationPlugin" />
+    </feature>
     <feature name="SpinnerPlugin">
-        <param name="android-package" value="net.justincredible.SpinnerPlugin" />
+        <param name="android-package" value="net.justin_credible.cordova.SpinnerPlugin" />
     </feature>
     <feature name="SplashScreen">
         <param name="android-package" value="org.apache.cordova.splashscreen.SplashScreen" />
@@ -27,52 +52,50 @@
     <feature name="SocialSharing">
         <param name="android-package" value="nl.xservices.plugins.SocialSharing" />
     </feature>
-    <feature name="UniversalLinks">
-        <param name="android-package" value="com.nordnetab.cordova.ul.UniversalLinksPlugin" />
-        <param name="onload" value="true" />
+    <feature name="Toast">
+        <param name="android-package" value="nl.xservices.plugins.Toast" />
     </feature>
     <feature name="Keyboard">
         <param name="android-package" value="io.ionic.keyboard.IonicKeyboard" />
         <param name="onload" value="true" />
     </feature>
     <feature name="PushNotification">
-        <param name="android-package" onload="true" value="com.pushwoosh.plugin.pushnotifications.PushNotifications" />
-    </feature>
-    <feature name="Geolocation">
-        <param name="android-package" value="org.apache.cordova.geolocation.Geolocation" />
-    </feature>
-    <feature name="Camera">
-        <param name="android-package" value="org.apache.cordova.camera.CameraLauncher" />
-    </feature>
-    <feature name="File">
-        <param name="android-package" value="org.apache.cordova.file.FileUtils" />
-        <param name="onload" value="true" />
+        <param name="android-package" value="com.adobe.phonegap.push.PushPlugin" />
     </feature>
     <feature name="FileTransfer">
         <param name="android-package" value="org.apache.cordova.filetransfer.FileTransfer" />
     </feature>
-    <feature name="FacebookConnectPlugin">
-        <param name="android-package" value="org.apache.cordova.facebook.ConnectPlugin" />
-        <param name="onload" value="true" />
+    <feature name="Camera">
+        <param name="android-package" value="org.apache.cordova.camera.CameraLauncher" />
     </feature>
-    <access origin="https://m.facebook.com" />
-    <access origin="https://graph.facebook.com" />
-    <access origin="https://api.facebook.com" />
-    <access origin="https://*.fbcdn.net" />
-    <access origin="https://*.akamaihd.net" />
-    <feature name="Toast">
-        <param name="android-package" value="nl.xservices.plugins.Toast" />
+    <feature name="SQLitePlugin">
+        <param name="android-package" value="com.nolanlawson.cordova.sqlite.SQLitePlugin" />
     </feature>
     <feature name="BranchSDK">
         <param name="android-package" value="io.branch.BranchSDK" />
         <param name="onload" value="true" />
     </feature>
-    <feature name="SQLitePlugin">
-        <param name="android-package" value="com.nolanlawson.cordova.sqlite.SQLitePlugin" />
-    </feature>
-    <feature name="BraintreePlugin">
-        <param name="android-package" value="net.justincredible.BraintreePlugin" />
-    </feature>
+    <name>Pockeyt</name>
+    <description>
+        Pockeyt Smart Payments for a Smart World.
+    </description>
+    <author email="nick.bonnaud@pockeyt.com" href="http://pockeyt.com">
+        Pockeyt
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <hook src="scripts/env.js" type="after_prepare" />
+    <branch-config>
+        <ios-team-id value="LXD2C94VJC" />
+        <android-prefix value="/igem" />
+        <host name="bnc.lt" scheme="https" />
+    </branch-config>
     <allow-intent href="market:*" />
     <framework src="com.android.support:multidex:1.0.0" />
     <icon density="ldpi" src="res/android/icon-small.png" />
@@ -91,33 +114,13 @@
     <splash density="land-ldpi" src="res/screen/android/splash.png" />
     <splash density="land-mdpi" src="res/screen/android/splash.png" />
     <splash density="land-xhdpi" src="res/screen/android/splash.png" />
-    <name>Pockeyt</name>
-    <description>
-        Pockeyt finds and connects you with your favorite businesses in your city.
-    </description>
-    <author email="nick.bonnaud@pockeyt.com" href="http://pockeyt.com">
-        Pockeyt
-    </author>
-    <content src="index.html" />
+    <preference name="loglevel" value="DEBUG" />
     <preference name="AndroidLaunchMode" value="singleTask" />
-    <access origin="*" />
-    <access origin="*.pushwoosh.com" />
-    <allow-intent href="http://*/*" />
-    <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
     <preference name="Orientation" value="portrait" />
     <preference name="SplashScreen" value="screen" />
     <preference name="SplashScreenDelay" value="3000" />
     <preference name="SplashMaintainAspectRatio" value="true" />
     <preference name="DisallowOverscroll" value="true" />
-    <hook src="scripts/env.js" type="after_prepare" />
-    <branch-config>
-        <ios-team-id value="LXD2C94VJC" />
-        <android-prefix value="/igem" />
-        <host name="bnc.lt" scheme="https" />
-    </branch-config>
+    <preference name="KeyboardDisplayRequiresUserAction" value="false" />
     <preference name="android-minSdkVersion" value="15" />
 </widget>

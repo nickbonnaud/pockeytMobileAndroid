@@ -2,9 +2,13 @@
 
   var module = angular.module('pockeyt.controllers.blogs', ['pockeyt.repositories.blogs', 'pockeyt.services.my-pockeyt']);
 
-  var BlogsController = function($scope, allPartners, repository, MyPockeyt) {
+  var BlogsController = function($rootScope, $scope, allPartners, repository, MyPockeyt) {
     if(typeof analytics !== "undefined") { analytics.trackView("Blog View"); }
     this.partners = {};
+
+    angular.element(document).ready(function () {
+      $rootScope.viewLoaded = true;
+    });
 
     $scope.parentShareContent = function(top) {
       if(typeof analytics !== "undefined") { analytics.trackEvent("Share Button", "Blog", top.blog_title, top.id); }
@@ -31,6 +35,6 @@
     this.partners.all = partners;
   };
 
-  module.controller('BlogsController', ['$scope', 'allPartners', 'blogsRepository', 'MyPockeyt', BlogsController]);
+  module.controller('BlogsController', ['$rootScope', '$scope', 'allPartners', 'blogsRepository', 'MyPockeyt', BlogsController]);
 
 })(angular);

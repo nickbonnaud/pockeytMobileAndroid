@@ -1,6 +1,6 @@
 (function(angular) {
 
-  var module = angular.module('pockeyt.services.bookmark', ['pockeyt.repositories.partners', 'pockeyt.models.partner', 'LocalStorageModule']);
+  var module = angular.module('pockeyt.services.bookmark', ['pockeyt.repositories.partners', 'pockeyt.models.partner', 'pockeyt.services.interaction-post', 'LocalStorageModule']);
 
   module.constant('BOOKMARK_POSTS_KEY', 'pockeyt.services.bookmark.posts');
   module.constant('POSTS_LOADED_EVENT', 'pockeyt.services.bookmark.posts-loaded');
@@ -12,8 +12,9 @@
     'Partner',
     '$rootScope',
     '$q',
+    'InteractionPost',
     'localStorageService',
-    function(POSTS_KEY, POSTS_LOADED_EVENT, partnersRepository, Partner, $rootScope, $q, storage) {
+    function(POSTS_KEY, POSTS_LOADED_EVENT, partnersRepository, Partner, $rootScope, $q, InteractionPost, storage) {
 
       var _cache = {
         posts: false
@@ -108,6 +109,9 @@
 
           if (partner) {
             ids.push(partner.id);
+            var type = 'bookmark';
+            var action = 'add';
+            InteractionPost.buttonInteraction(type, partner, action);
           };
           return storage.set(POSTS_KEY, ids) ? $q.resolve(posts) : $q.reject(new Error('Failed to store posts.'));
         });
@@ -152,6 +156,9 @@
               });
 
               if(removed) {
+                var type = 'bookmark';
+                var action = 'remove';
+                InteractionPost.buttonInteraction(type, partner, action);
                 return storage.set(POSTS_KEY, ids) ? $q.resolve(partner) : $q.reject(new Error('Failed to remove post'));
               } else {
                 return $q.resolve(partner);

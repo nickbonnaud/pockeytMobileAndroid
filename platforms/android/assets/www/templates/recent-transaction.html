@@ -1,0 +1,34 @@
+<div class="view-my-profile view-main-section">
+<a href="#" ui-sref="main.menu.recent-transactions"><span ng-class="checkDevice()"></span></a>
+	<div id="container" class="content-container-profile content-scroll-container">
+		<div class="tips-top-section">
+			<img class="tips-business-logo" ng-src="{{ transaction.business_logo }}">
+			<span class="tips-title-section">
+				<h4 class="tips-business-title" ng-bind="transaction.business_name"></h4>
+				<p ng-bind="transaction.updated_at.toDateString()"></p>
+			</span>
+		</div>
+		<div class="tips-main-section">
+			<div class="tips-receipt-section-header">
+				<h4>Item</h4>
+				<h4 class="pull-right">Amount</h4>
+			</div>
+			<div class="tips-receipt-section-body">
+				<div ng-repeat="item in bill">
+					<h4 class="tips-item-name">{{ item.quantity }}x {{ item.name }}</h4>
+					<h4 class="tips-item-amount">${{ (item.price * item.quantity) / 100 | number:2 }}</h4>
+				</div>
+				<div class="tips-receipt-section-subtotal">
+					<h4 class="tips-tax-title">Tax</h4>
+					<h4 class="tips-tax-total">${{transaction.tax / 100 | number:2 }}</h4>
+					<h4 class="tips-tax-title" ng-if="transaction.tips != null && transaction.tips != 0">Tip</h4>
+					<h4 class="tips-tax-total" ng-if="transaction.tips != null && transaction.tips != 0">${{transaction.tips / 100 | number:2 }}</h4>
+				</div>
+			</div>
+		</div>
+		<div class="bill-total-section-individual">
+			<h3 class="tips-total-title">Total</h3>
+			<h3 class="tips-total-amount">${{ transaction.total / 100 | number:2 }}</h3>
+		</div>
+	</div>
+</div>

@@ -1,20 +1,18 @@
 <div class="view-my-pockeyt view-main-section">
-   <div class="section-title section-title-waypoints">
-        <h1>Waypoints</h1>
-    </div>
+<a href="#" ui-sref="main.menu"><span ng-class="checkDevice()"></span></a>
    <div id="container" class="content-container content-scroll-container">
         <!--suppress XmlDuplicatedId -->
-        <ul class="table-view control-content active" id="my-pockeyt-new" ng-if="!empty" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
-            <li ng-repeat="partner in bookmark.partners.all" bookmark-list-item="partner" share-content="parentShareContent" toggle-favorite="parenttoggleFavorite" is-favorite="parentIsFavorite" search-active="parentSearchActive" toggle-bookmark="parentToggleBookmark" is-bookmark="parentIsBookmark"></li>
+        <ul class="table-view control-content active" id="my-pockeyt-new" ng-if="!empty() && hasMore()" infinite-scroll="loadMore()" infinite-scroll-distance='1' infinite-scroll-parent="true">
+            <li ng-repeat="partner in bookmark.partners.all" bookmark-list-item="partner" share-content="parentShareContent" open-menu="parentOpenMenu" purchase-post="parentPurchasePost"></li>
+        </ul>
+        <ul class="table-view control-content active" id="my-pockeyt-new" ng-if="!empty() && !hasMore()">
+            <li ng-repeat="partner in bookmark.partners.all" bookmark-list-item="partner" share-content="parentShareContent" open-menu="parentOpenMenu" purchase-post="parentPurchasePost"></li>
         </ul>
 
         <!--suppress XmlDuplicatedId -->
-        <ul class="table-view control-content active" id="my-pockeyt-new" ng-if="empty" ng-hide="noResults()" infinite-scroll="loadMoreFavs()" infinite-scroll-distance='1' infinite-scroll-parent="true">
+        <ul class="table-view control-content active" id="my-pockeyt-new" ng-if="empty()">
             <li class="table-view-cell table-view-cell-center">
-                <strong>You haven't saved any posts!</strong>
-            </li>
-            <li class="table-view-cell table-view-cell-center">
-                <p>To save a post just tap on <span class="ea-icon-bookmark-example"></p>
+                <strong>No Bookmarked Posts</strong>
             </li>
         </ul>
         <div class="spinner" ng-show="isLoading()">
